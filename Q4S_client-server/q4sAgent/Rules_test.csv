@@ -1,0 +1,13 @@
+S0;ALERT;4;*;0;2;0;0;Comando x;S1.1
+S0;ALERT;0;4;2;*;0;0;Comando z;S1.2
+S0;ALERT;0;4;0;2;0;*;Comando z;S1.3
+S1.1;ALERT;4;*;0;2;0;0;Comando a;S2.1
+S1.1;ALERT;0;4;2;*;0;0;Comando b;S2.2
+S1.1;ALERT;0;4;0;2;0;*;Comando h;S2.3
+S1.1;RECOVERY;0;4;0;2;0;0;Comando c;S0
+S1.2;ALERT;4;*;0;2;0;0;Comando a;S2.4
+S1.2;ALERT;0;4;2;*;0;0;Comando d;S2.5
+S1.2;ALERT;0;4;0;2;0;*;Comando f;S2.6
+S1.2;RECOVERY;0;4;0;2;0;*;Comando h;S0
+S2.1;RECOVERY;4;*;0;2;0;0;Comando agg;S1.1
+
