@@ -276,7 +276,7 @@ bool Q4SMessageManager::readCancelMessage()
         {
             // Message found.
             found = true;
-
+            printf("CANCEL ENCONTRADO\n");
         }
     }
     

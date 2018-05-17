@@ -1,5 +1,5 @@
 #include "ConfigFile.h"
-
+#include <typeinfo> 
 #include <iostream>
 #include <string>
 #include <sstream>

@@ -1,6 +1,6 @@
 #ifndef _CONFIG_FILE_H_
 #define _CONFIG_FILE_H_
-
+#include <typeinfo> 
 #include <iostream>
 #include <string>
 #include <sstream>

@@ -32,8 +32,7 @@ class Q4SCommonProtocol
 												unsigned long pingsSent, 
 												float &packetLoss, 
 												bool showMeasureInfo=true);
-		void	calculateBandwidthStage1(unsigned long sequenceNumber, unsigned long bandwidthTime, float &bandwidth);
-        bool    calculatePacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss);
+        bool    calculateBandwidthPacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss, unsigned long bandwidthTime, float &bandwidth);
         bool    checkStage0(unsigned long maxLatencyUp, unsigned long maxJitterUp, 
 			unsigned long maxLatencyDown, unsigned long maxJitterDown, 
 			Q4SMeasurementResult &upResults, 

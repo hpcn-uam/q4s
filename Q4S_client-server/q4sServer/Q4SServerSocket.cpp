@@ -541,7 +541,7 @@ bool Q4SServerSocket::createUdpSocket( )
 
     if( ok )
     {
-        int size= 32*1024*1024;
+        int size= 232*1024*1024;
         mUdpSocket = socket( mpAddrInfoResultUdp->ai_family, mpAddrInfoResultUdp->ai_socktype, mpAddrInfoResultUdp->ai_protocol );
         if( mUdpSocket <=0 ) 
         {

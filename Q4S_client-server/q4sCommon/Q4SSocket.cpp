@@ -121,9 +121,14 @@ bool Q4SSocket::receiveData( char* receiveBuffer, int receiveBufferSize, sockadd
         mPeerAddrInfoLen = (socklen_t)sizeof( mPeerAddrInfo );
     }
     iResult = recvfrom( mSocket, receiveBuffer, receiveBufferSize, 0, ( sockaddr* )&mPeerAddrInfo, &mPeerAddrInfoLen );
+    if (iResult < 0)
+    {
+        printf( "Error at socket()\n" );
+        printf("Error code: %d\n", errno); 
+    }
     if( mSocketType == SOCK_STREAM )
     {    
-         setsockopt(mSocket, IPPROTO_TCP, TCP_QUICKACK, (char *)&value, sizeof(int));
+        setsockopt(mSocket, IPPROTO_TCP, TCP_QUICKACK, (char *)&value, sizeof(int));
 
     } 
 

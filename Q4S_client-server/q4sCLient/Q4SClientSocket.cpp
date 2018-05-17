@@ -185,7 +185,7 @@ bool Q4SClientSocket::connectToServer( Q4SSocket* q4sSocket, int socketType )
             } 
             if( hints.ai_socktype == SOCK_DGRAM )
             {    
-                int size= 32*1024*1024;
+                int size= 232*1024*1024;
                 setsockopt(socketAttempt, SOL_SOCKET, SO_RCVBUF, &size, (socklen_t)sizeof(int));
 
             }

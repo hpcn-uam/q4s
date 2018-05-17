@@ -164,9 +164,12 @@ bool Q4SMessageTools_isCancel(std::string message)
     // Convert message to a stringstream 
   
         std::getline(messageStream, extracted, ' ');
-        // Check if method is ping
+        // Check if method is Cancel
         if ( extracted.compare("CANCEL\r") != 0)
         {
+            printf("MENSAJE EXTRAIDO CANCEL: %s\n", extracted.c_str());
+
+            printf("MENSAJE CANCEL: %s\n", message.c_str());
             ok = true;
         }
     

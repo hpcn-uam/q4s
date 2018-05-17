@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <vector>
 #include <sstream>
-
+#include <math.h>
 //#include "ETime.h"
 #include "../q4sCommon/Q4SMathUtils.h"
 #include "Q4SServerConfigFile.h"
@@ -661,6 +661,48 @@ bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
 
     printf( "Starting:measureStage1.\n" );
 
+    float message_size= 1066*8; 
+    float messages_fract_per_ms = ((float) params.bandWidthDown / (float) message_size);
+    printf("messages_fract_per_ms: %f\n", messages_fract_per_ms);
+    int   messages_int_per_ms = floor(messages_fract_per_ms);
+    printf("messages_int_per_ms: %d\n", messages_int_per_ms);
+
+    int messages_per_s[10];
+    messages_per_s[0] = (int) ((messages_fract_per_ms - (float) messages_int_per_ms) * 1000);
+    printf("messages per s: %d\n", messages_per_s[0]);
+    int ms_per_message[11];
+    ms_per_message[0] = 1;
+    int divisor;
+    for (int i = 0; i < 10; i++) 
+    {
+        divisor = 2;
+        ////////////////////////////////////////////////
+        // MAYOR O IGUAL 
+        ////////////////////////////////////////////////
+        while ((int) (1000/divisor) >= messages_per_s[i]) 
+        {
+            divisor++;
+        }
+        ms_per_message[i+1] = divisor;
+        printf("%d", ms_per_message[i+1]); 
+        if (messages_per_s[i] - (int) (1000/divisor) == 0) 
+        {
+            break;
+        } 
+        else if (messages_per_s[i] - (int) (1000/divisor) <= 1) 
+        {
+            ms_per_message[i+1]--;
+            break;
+        } 
+        else 
+        {
+            messages_per_s[i+1] = messages_per_s[i] - (int) (1000/divisor);
+        }
+    }
+
+ 
+
+    printf("%s\n", ms_per_message);
     Q4SMessage message;    
     struct timeval time_s;
     int time_error = gettimeofday(&time_s, NULL); 
@@ -671,34 +713,61 @@ bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
     struct timeval time_t_aux;
     time_error = gettimeofday(&time_t_aux, NULL); 
 
-    unsigned long TimeStamp2 =  time_t_aux.tv_sec*1000 + time_t_aux.tv_usec/1000;
+    unsigned long TimeStamp2;
     unsigned long sequenceNumber = 0;
-    unsigned long TimeStamp3;
-    while(ok && (TimeStamp2  < initialTimeStamp + params.procedure.bandwidthTime))
+    int diffTime; 
+    int interval= 0; 
+    while(ok && interval != params.procedure.bandwidthTime)
     {
+        int j = 0; 
         time_error = gettimeofday(&time_t_aux, NULL); 
-        TimeStamp3 =  time_t_aux.tv_sec*1000 + time_t_aux.tv_usec/1000;
-        ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SServerConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp3);
-        ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID, message.getMessageCChar());
-
-        time_error = gettimeofday(&time_t_aux,NULL); 
         TimeStamp2 =  time_t_aux.tv_sec*1000 + time_t_aux.tv_usec/1000;
-        sequenceNumber++;
+        
+
+        while (j < messages_int_per_ms) 
+            {
+                ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SServerConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
+                ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID, message.getMessageCChar());
+                sequenceNumber++; 
+                j++; 
+            }
+
+       for (int k = 1; k < sizeof(ms_per_message); k++) 
+        {
+            if (ms_per_message[k] > 0 && interval % ms_per_message[k] == 0) 
+            {
+                ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SServerConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
+                ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID, message.getMessageCChar());
+                sequenceNumber++;  
+            }
+        }
+        /*
+        time_error = gettimeofday(&time_t_aux, NULL);
+        TimeStamp3 =  time_t_aux.tv_sec*1000 + time_t_aux.tv_usec/1000;
+        printf("TimeStamp3 %lu",TimeStamp3);
+        diffTime= (int)(TimeStamp3- TimeStamp2);    
+        printf("diffTime %d\n", diffTime); 
+        usleep(1000-(diffTime*1000)); 
+        */
+        usleep(1000);
+        interval++;
     }
+    /*
     if (ok)
     {
         calculateBandwidthStage1(sequenceNumber, params.procedure.bandwidthTime, results.values.bandwidth);
         printf( "MEASURING RESULT - BandWidth Down: %0.2f kb/s\n", results.values.bandwidth );
     }
-
+    */
     if (ok)
     {
         // Calculate PacketLoss
-        bool okCalculated = calculatePacketLossStage1(mReceivedMessages, results.values.packetLoss);
+        bool okCalculated = calculateBandwidthPacketLossStage1(mReceivedMessages, results.values.packetLoss, params.procedure.bandwidthTime, results.values.bandwidth);
         if (!okCalculated)
         {
             printf( "PacketLoss Calculation Error");
         }
+        printf( "MEASURING RESULT - BandWidth Down: %0.2f kb/s\n", results.values.bandwidth );
 
         printf( "MEASURING RESULT - PacketLoss Down: %.3f %\n", results.values.packetLoss );
     }
@@ -832,7 +901,7 @@ void* Q4SServerProtocol::manageUdpReceivedData( )
 
             unsigned long actualTimeStamp =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
 
-            std::string message = udpBuffer;
+            std::string message = std::string(udpBuffer);
 
             int pingNumber = 0;
             unsigned long receivedTimeStamp = 0;

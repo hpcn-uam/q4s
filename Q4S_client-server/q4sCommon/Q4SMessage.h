@@ -2,7 +2,10 @@
 #define _Q4SMESSAGE_H_
 
 #include <string>
+#include <vector>
 #include "Q4SSDP.h"
+#include "Q4SMessageInfo.h"
+
 #include "Q4SStructs.h"
 
 

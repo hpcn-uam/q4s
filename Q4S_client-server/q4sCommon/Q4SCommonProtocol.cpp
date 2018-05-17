@@ -152,20 +152,13 @@ std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMes
     return recivedSequenceNumberList;
 }
 
-void Q4SCommonProtocol::calculateBandwidthStage1(unsigned long sequenceNumber, unsigned long bandwidthTime, float &bandwidth)
-{
-    float numberOfPacketsPerSecond = (float)sequenceNumber * 1000.f / (float)bandwidthTime;//1066
-    float kilobitsPerSecond = numberOfPacketsPerSecond * 8;
-    bandwidth = kilobitsPerSecond;
 
-}
-
-bool Q4SCommonProtocol::calculatePacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss)
+bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss, unsigned long bandwidthTime, float &bandwidth)
 {
     bool ok = false;
 
     packetLoss = 0;
-
+    printf("%d\n", sizeof(mReceivedMessages));
     std::set<unsigned long> recivedSequenceNumberList = obtainSortedSequenceNumberList(mReceivedMessages);
 
     if (!recivedSequenceNumberList.empty())
@@ -184,10 +177,10 @@ bool Q4SCommonProtocol::calculatePacketLossStage1(Q4SMessageManager &mReceivedMe
                 packetLossCount += (*it - sequenceNumber);
                 sequenceNumber = *it;
                 sequenceNumber++;
+                printf("%d, %d\n", sequenceNumber, packetLossCount);
             }
             else
             {
-
                 sequenceNumber++;
             }
 
@@ -195,13 +188,17 @@ bool Q4SCommonProtocol::calculatePacketLossStage1(Q4SMessageManager &mReceivedMe
             totalPacketSent++;
         }
 
+
         if (totalPacketSent > 0)
         {
             packetLoss = ((float)packetLossCount/ (float)(totalPacketSent)) * 100.f;
             ok = true;
         }
+        float numberOfPacketsPerSecond = (float)sequenceNumber * 1066.f / (float)bandwidthTime;//1066
+        float kilobitsPerSecond = numberOfPacketsPerSecond * 8;
+        bandwidth = kilobitsPerSecond;
     }
-
+    
     return ok;
 }
 
