@@ -108,7 +108,7 @@ void Q4SClientProtocol::bwidth()
 }
 void Q4SClientProtocol::cancel()
 {
-    printf("METHOD: cancel TODO\n");
+    printf("METHOD: cancel\n");
     mClientSocket.sendTcpData( "CANCEL\r\n" );
     //done(); 
 }
@@ -118,9 +118,11 @@ bool Q4SClientProtocol::ready(unsigned long stage,Q4SSDPParams &params)
     printf("METHOD: ready\n");
 
     bool ok = true;
-    
+    mReceivedMessages.done(); 
+    mReceivedMessages.init();
     if( ok )
     {
+
         Q4SMessage message;
         message.initRequest(Q4SMTYPE_READY, "myIP", q4SClientConfigFile.defaultTCPPort, false, 0, false, 0, true, stage);
         ok &= mClientSocket.sendTcpData( message.getMessageCChar() );
@@ -394,24 +396,20 @@ bool Q4SClientProtocol::interchangeMeasurementProcedure(Q4SMeasurementValues &do
     {
         // Wait to recive the measurements Ping
         Q4SMessageInfo  messageInfo;
-        ok &= mReceivedMessages.readPingMessage( 0, messageInfo, true );
-        if (ok)
+        ok= false; 
+        while(!ok)
         {
-            ok &= Q4SMeasurementValues_parse(messageInfo.message, downMeasurements);
-            if (!ok)
+
+            ok = mReceivedMessages.readPingMessage( 0, messageInfo, true );
+            if (ok)
             {
-                printf( "ERROR:Interchange Read measurements fail\n");
+                ok &= Q4SMeasurementValues_parse(messageInfo.message, downMeasurements);
+                if (!ok)
+                {
+                    printf( "ERROR:Interchange Read measurements fail\n");
+                }
             }
-        }
-        else
-        {
-            printf( "ERROR:Interchange Read PING fail\n");
-            printf( "Messages:\n");
-            std::string toPrint;
-            while (mReceivedMessages.readFirst(toPrint))
-            {
-                printf(toPrint.c_str());
-            }
+          
         }
     }
 
@@ -546,7 +544,6 @@ bool Q4SClientProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
             divisor++;
         }
         ms_per_message[i+1] = divisor;
-        printf("%d\n", ms_per_message[i+1]);
         if (messages_per_s[i] - (int) (1000/divisor) == 0) 
         {
             break;
@@ -578,7 +575,6 @@ bool Q4SClientProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
         time_error = gettimeofday(&time_t_aux, NULL); 
         TimeStamp2 =  time_t_aux.tv_sec*1000 + time_t_aux.tv_usec/1000;
         
-        
         while (j < messages_int_per_ms) 
             {
                 ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SClientConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
@@ -587,10 +583,12 @@ bool Q4SClientProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
                 j++; 
             }
 
-       for (int k = 1; k < sizeof(ms_per_message); k++) 
+       for (int k = 1; k < 11; k++) 
         {
             if (ms_per_message[k] > 0 && interval % ms_per_message[k] == 0) 
-            {
+            {           
+
+                //printf("mensahe extra %d, %d, %d, %d\n", interval, ms_per_message[k], k, sizeof(ms_per_message));
                 ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SClientConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
                 ok &= mClientSocket.sendUdpData(message.getMessageCChar());
                 sequenceNumber++;  

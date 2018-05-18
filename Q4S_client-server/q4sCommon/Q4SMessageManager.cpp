@@ -26,6 +26,7 @@ bool Q4SMessageManager::init( )
 
 void Q4SMessageManager::done( )
 {
+    mMessages.clear();
     pthread_mutex_destroy(&mut_section);
     sem_destroy(&mevMessageReady);
 }

@@ -116,17 +116,17 @@ void Q4SServerProtocol::closeConnectionListening()
     if( ok )
     {
         mServerSocket.stopWaiting( );
+        pthread_join( marrthrListenHandle[0], NULL);
+        pthread_join( marrthrListenHandle[1], NULL);
     }
-    if( ok )
-    {    
+     
         /*
         pthread_mutex_destroy(&mut_flag);
         pthread_mutex_destroy(&mut_Timestamp);
         */
-        pthread_join( marrthrListenHandle[0], NULL);
-        pthread_join( marrthrListenHandle[1], NULL);
+
         //pthread_join( marrthrListenHandle[2], NULL);
-    }
+    
 
     if( !ok )
     {
@@ -265,24 +265,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
                 
                 //Alert
                 Q4SServerProtocol::alert(alertMessage);
-            }
-            /*
-            // Check if CANCEL has been received
-            if (mReceivedMessages.size() != 0)
-            {
-               Q4SMessageInfo message;
-               std::string pattern;
-               pattern.assign( "CANCEL" );
-               bool cancelMessageReceived = mReceivedMessages.readMessage( pattern, message, false);
-               if(Q4SMessageTools_isCancel(message.message))
-               {
-                   printf("CANCEL received: %s\n", message.message.c_str());
-                   ok = false;
-                   closeConnections();
-               }
-            }
-            */
-            
+            }           
         }
         qosLevel= QOS_negotiation; 
     }
@@ -292,7 +275,6 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
 void Q4SServerProtocol::continuity(Q4SSDPParams params)
 {
     printf("----------Continuity Phase\n");
-    bool stop = false;
     bool measureOk = true;
     /*
     pthread_mutex_lock (&mut_flag);
@@ -596,6 +578,7 @@ bool Q4SServerProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
     if(!ok)
     {
         printf( "ERROR:PING 0 is not the first message.\n" );
+        stop= true; 
     }
 
     if( ok )
@@ -663,13 +646,10 @@ bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
 
     float message_size= 1066*8; 
     float messages_fract_per_ms = ((float) params.bandWidthDown / (float) message_size);
-    printf("messages_fract_per_ms: %f\n", messages_fract_per_ms);
     int   messages_int_per_ms = floor(messages_fract_per_ms);
-    printf("messages_int_per_ms: %d\n", messages_int_per_ms);
 
     int messages_per_s[10];
     messages_per_s[0] = (int) ((messages_fract_per_ms - (float) messages_int_per_ms) * 1000);
-    printf("messages per s: %d\n", messages_per_s[0]);
     int ms_per_message[11];
     ms_per_message[0] = 1;
     int divisor;
@@ -684,7 +664,6 @@ bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
             divisor++;
         }
         ms_per_message[i+1] = divisor;
-        printf("%d", ms_per_message[i+1]); 
         if (messages_per_s[i] - (int) (1000/divisor) == 0) 
         {
             break;
@@ -702,7 +681,6 @@ bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
 
  
 
-    printf("%s\n", ms_per_message);
     Q4SMessage message;    
     struct timeval time_s;
     int time_error = gettimeofday(&time_s, NULL); 
@@ -725,15 +703,16 @@ bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
         
 
         while (j < messages_int_per_ms) 
-            {
+            {                
                 ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SServerConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
                 ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID, message.getMessageCChar());
                 sequenceNumber++; 
                 j++; 
             }
 
-       for (int k = 1; k < sizeof(ms_per_message); k++) 
+       for (int k = 1; k < 11; k++) 
         {
+
             if (ms_per_message[k] > 0 && interval % ms_per_message[k] == 0) 
             {
                 ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SServerConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
@@ -741,14 +720,7 @@ bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
                 sequenceNumber++;  
             }
         }
-        /*
-        time_error = gettimeofday(&time_t_aux, NULL);
-        TimeStamp3 =  time_t_aux.tv_sec*1000 + time_t_aux.tv_usec/1000;
-        printf("TimeStamp3 %lu",TimeStamp3);
-        diffTime= (int)(TimeStamp3- TimeStamp2);    
-        printf("diffTime %d\n", diffTime); 
-        usleep(1000-(diffTime*1000)); 
-        */
+        
         usleep(1000);
         interval++;
     }

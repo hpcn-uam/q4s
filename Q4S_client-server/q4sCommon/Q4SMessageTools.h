@@ -1,5 +1,6 @@
 #ifndef _Q4SMESSAGETOOLS_H_
 #define _Q4SMESSAGETOOLS_H_
+#include <string.h>
 
 #include <string>
 

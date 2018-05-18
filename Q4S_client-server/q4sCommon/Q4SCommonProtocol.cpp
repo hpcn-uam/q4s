@@ -177,7 +177,6 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
                 packetLossCount += (*it - sequenceNumber);
                 sequenceNumber = *it;
                 sequenceNumber++;
-                printf("%d, %d\n", sequenceNumber, packetLossCount);
             }
             else
             {

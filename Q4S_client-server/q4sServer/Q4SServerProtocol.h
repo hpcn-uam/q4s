@@ -51,7 +51,7 @@ private:
     Q4SServerSocket             mServerSocket;
     pthread_t                   marrthrListenHandle[ 2 ];
     pthread_t                   marrthrDataHandle[2];
-    
+    bool                        stop=false; 
 
 
     void*                       manageTcpConnection( );
