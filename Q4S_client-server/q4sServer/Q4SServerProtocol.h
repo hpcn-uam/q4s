@@ -70,15 +70,21 @@ private:
     void*                       manageUdpReceivedData( );
     static void*                manageTcpReceivedDataFn( void* lpData );
     static void*                manageUdpReceivedDataFn( void* lpData );
-
+    void*                       manageBWReceivedData( );    
+    static void*                manageBWReceivedDataFn( void* lpData);
+    void*                       sendUDPBW(unsigned long bandWidthUp);
+    static void*                sendUDPBWFn(void* BWinfoFn );
     Q4SMessageManager           mReceivedMessages;
-
+    unsigned long               bandWidthUp; 
     unsigned long               lastAlertTimeStamp;
     unsigned long               recoveryTimeStamp;
     //unsigned long               expiratedTimeStamp;
     int                         qosLevel;
     int                         qosLevelMax; 
-    //bool                        flagEoS; 
+    //bool                        flagEoS;    
+    sem_t                       UDPSem; 
+    pthread_t                   sendUDPBW_thread;  
+
 };
 
 #endif  // _Q4SSERVERPROTOCOL_H_

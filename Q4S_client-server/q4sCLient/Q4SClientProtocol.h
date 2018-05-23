@@ -35,25 +35,32 @@ private:
     void    bwidth();
     void    cancel();
     bool    measureStage0(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &downResults,unsigned long pingsToSend);
-    bool   measureContinuity(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &downResults, unsigned long pingsToSend);
+    bool    measureContinuity(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &downResults, unsigned long pingsToSend);
     bool    sendRegularPings(std::vector<unsigned long> &arrSentPingTimestamps, unsigned long pingsToSend, unsigned long timeBetweenPings);
     bool    measureStage1(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &downResults);
 
     bool            interchangeMeasurementProcedure(Q4SMeasurementValues &downMeasurements, Q4SMeasurementResult results);
     void            sighand(int signo);
-    void*           manageUdpReceivedData( );
+    void*           manageBWReceivedData( );    
+    static void*    manageBWReceivedDataFn( void* lpData);    
+    void*           manageUdpReceivedData( );    
     static void*    manageUdpReceivedDataFn( void* lpData);
+    void*           sendUDPBW();
+    static void*    sendUDPBWFn(void* BWinfoFn );
+    void*           sendUDPBW(unsigned long bandWidthDown);
     void*           manageTcpReceivedData( );
     static void*    manageTcpReceivedDataFn(void* lpData );
-
+    unsigned long  bandWidthDown; 
+    
 	Q4SClientSocket             mClientSocket;    
     Q4SMessageManager           mReceivedMessages;
     Q4SMeasurementResult        mResults;
     pthread_t                   marrthrHandle[ 2 ]; 
-    struct sigaction            actions;
     int                         qosLevel;
     int                         qosLevelMax; 
     unsigned long               lastAlertTimeStamp;
     unsigned long               recoveryTimeStamp;
+    sem_t                       UDPSem; 
+    pthread_t                   sendUDPBW_thread; 
 
 };

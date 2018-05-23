@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include "Q4SSDPParams.h"
+#include <algorithm> 
 
 class Q4SMessageManager;
 
@@ -63,7 +64,7 @@ class Q4SCommonProtocol
 								bool calculatePacketLoss, 
 								float &packetLoss, 
 								bool showMeasureInfo);
-		std::set<unsigned long> obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages);
+		std::set<unsigned long> obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<unsigned long> &TimeStamplist);
 		int contador= 0; 
 	/*
 	// TEST

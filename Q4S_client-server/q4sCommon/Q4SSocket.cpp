@@ -106,6 +106,7 @@ bool Q4SSocket::receiveData( char* receiveBuffer, int receiveBufferSize, sockadd
     int     iResult;
     int value= 0; 
 
+/*
     if( mSocketType == SOCK_STREAM )
     {
     }
@@ -116,6 +117,7 @@ bool Q4SSocket::receiveData( char* receiveBuffer, int receiveBufferSize, sockadd
     {
         ok &= false;
     }
+    */
     if( mPeerAddrInfoLen == 0 )
     {
         mPeerAddrInfoLen = (socklen_t)sizeof( mPeerAddrInfo );
@@ -136,13 +138,16 @@ bool Q4SSocket::receiveData( char* receiveBuffer, int receiveBufferSize, sockadd
     {
         memcpy( pAddrInfo, &mPeerAddrInfo, sizeof( mPeerAddrInfo ) );
     }
+
+/*
     if ( showInfo) 
     {
         printf( "Exiting from receive in %d type\n", mSocketType );
     }
-
+*/
     if( iResult > 0 )
     {
+        /*
         if ( showInfo) 
         {
             if( mSocketType == SOCK_STREAM )
@@ -154,7 +159,8 @@ bool Q4SSocket::receiveData( char* receiveBuffer, int receiveBufferSize, sockadd
                 printf( "Bytes received by Udp: %d\n", iResult );
             }
         }
-        receiveBuffer[ iResult ] = '\0';
+        */
+        //receiveBuffer[ iResult ] = '\0';
         mAlreadyReceived = true;
     }
     else 

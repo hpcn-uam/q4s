@@ -138,15 +138,19 @@ void Q4SCommonProtocol::calculateJitterAndPacketLossContinuity(
     calculateJitter(mReceivedMessages, jitter, timeBetweenPings, pingsSent, true, packetLoss, showMeasureInfo);
 }
 
-std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages)
+std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<unsigned long> &TimeStamplist)
 {
     std::set<unsigned long> recivedSequenceNumberList;
-
+    unsigned long timeStamp; 
     unsigned long messageSequenceNumber;
 
-    while (mReceivedMessages.readBandWidthMessage(messageSequenceNumber, true) )
+    while (mReceivedMessages.readBandWidthMessage(messageSequenceNumber, true, &timeStamp) )
     {
+        
+        TimeStamplist.insert(timeStamp);
+        //printf("%lu, %lu\n", timeStamp, messageSequenceNumber);
         recivedSequenceNumberList.insert(messageSequenceNumber);
+
     }
 
     return recivedSequenceNumberList;
@@ -156,45 +160,65 @@ std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMes
 bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss, unsigned long bandwidthTime, float &bandwidth)
 {
     bool ok = false;
-
+    std::set<unsigned long> TimeStamplist;
     packetLoss = 0;
-    printf("%d\n", sizeof(mReceivedMessages));
-    std::set<unsigned long> recivedSequenceNumberList = obtainSortedSequenceNumberList(mReceivedMessages);
+    std::set<unsigned long> recivedSequenceNumberList = obtainSortedSequenceNumberList(mReceivedMessages, TimeStamplist);
 
     if (!recivedSequenceNumberList.empty())
     {
         unsigned long packetLossCount = 0;
         unsigned long prevSequenceNumber = 0;
         unsigned long listIndex = 0;
-        unsigned long sequenceNumber = 0;
+        unsigned long sequenceNumber = 0;        
+        unsigned long TimeStampInit;
+        unsigned long TimeStampEnd;
+
+        std::set<unsigned long>::iterator itTimeStamp;
+
         std::set<unsigned long>::iterator it;
         unsigned long totalPacketSent;
-
+        itTimeStamp=TimeStamplist.begin();
         for (it=recivedSequenceNumberList.begin(); it!=recivedSequenceNumberList.end(); ++it)
         {
+            if (sequenceNumber==0)
+            {
+                TimeStampInit= *itTimeStamp;
+            }
+            //printf("prueba\n");
             if (sequenceNumber != *it)
             {
                 packetLossCount += (*it - sequenceNumber);
                 sequenceNumber = *it;
                 sequenceNumber++;
+                printf("sequenceNumber Perdido: %lu, numero de paquetes perdidos en total: %lu\n", sequenceNumber, packetLossCount );
             }
             else
             {
                 sequenceNumber++;
             }
-
+            
             totalPacketSent = *it;
             totalPacketSent++;
+            if (itTimeStamp!= TimeStamplist.end())
+            {
+                TimeStampEnd= *itTimeStamp; 
+                itTimeStamp++; 
+            }
         }
-
+        printf("NUmero total de paquetes recibidos%lu\n", sequenceNumber);
 
         if (totalPacketSent > 0)
         {
             packetLoss = ((float)packetLossCount/ (float)(totalPacketSent)) * 100.f;
             ok = true;
         }
-        float numberOfPacketsPerSecond = (float)sequenceNumber * 1066.f / (float)bandwidthTime;//1066
-        float kilobitsPerSecond = numberOfPacketsPerSecond * 8;
+        float ATimestamp = (float)(TimeStampEnd-TimeStampInit);
+        
+        //printf("timestamp end: %lu\n", TimeStampEnd);
+        //printf("timestamp begin: %lu\n", TimeStampInit);
+        printf("DIFERENCIA TIMESTAMP: %f\n", ATimestamp);       
+        float numberOfkilobytesPerSecond = (float)sequenceNumber * 1000.f / (ATimestamp);//1066
+        float kilobitsPerSecond = numberOfkilobytesPerSecond * 8;
         bandwidth = kilobitsPerSecond;
     }
     

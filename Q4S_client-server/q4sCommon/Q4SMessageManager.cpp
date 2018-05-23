@@ -39,21 +39,21 @@ void Q4SMessageManager::clear( )
 
 void Q4SMessageManager::addMessage( std::string &message, unsigned long timestamp )
 {
-    bool signal = false;
+    /*bool signal = false;
     
-    pthread_mutex_lock (&mut_section);
     
 
     if( mMessages.size( ) == 0 )
     {
         signal = true;
     }
+    */
     token++;
-    sem_post( &mevMessageReady);
-    
     Q4SMessageInfo messageInfo;
     messageInfo.message = message;
-    messageInfo.timeStamp = timestamp;
+    messageInfo.timeStamp = timestamp;    
+    pthread_mutex_lock (&mut_section);    
+    sem_post( &mevMessageReady);
     mMessages.push_back( messageInfo );
     pthread_mutex_unlock (&mut_section);
 }
@@ -216,7 +216,7 @@ bool Q4SMessageManager::read200OKMessage( Q4SMessageInfo& messageInfo, bool eras
     return found;
 }
 
-bool Q4SMessageManager::readBandWidthMessage(unsigned long &sequenceNumber, bool erase )
+bool Q4SMessageManager::readBandWidthMessage(unsigned long &sequenceNumber, bool erase, unsigned long *timestampBW)
 {
     bool    found = false;
     std::list< Q4SMessageInfo >::iterator  itr_msg;
@@ -234,6 +234,8 @@ bool Q4SMessageManager::readBandWidthMessage(unsigned long &sequenceNumber, bool
             // Message found.
             found = true;
            sequenceNumber = messagePingIndex;
+           *timestampBW= itr_msg->timeStamp; 
+           //printf("%lu\n", itr_msg->timeStamp);
        }
     }
    
