@@ -70,7 +70,7 @@ class Q4SMessage
                         bool isSequenceNumber=false,
                         unsigned long sequenceNumber=0,
                         bool isTimeStamp=false,
-                        unsigned long timeStamp=0,
+                        uint64_t timeStamp=0,
                         bool isStage=false,
                         unsigned long stage=0,
                         bool isMeaurements=false,
@@ -82,7 +82,7 @@ class Q4SMessage
                         bool isSequenceNumber,
                         unsigned long sequenceNumber,
                         bool isTimeStamp,
-                        unsigned long timeStamp,
+                        uint64_t timeStamp,
                         bool isStage,
                         unsigned long stage,
                         Q4SSDPParams q4SSDPParams);
@@ -94,8 +94,8 @@ class Q4SMessage
 
     bool    initResponse(Q4SResponseCode q4SResponseCode, std::string reasonPhrase);
     bool    init200OKBeginResponse(Q4SSDPParams q4SSDPParams);
-    bool    initPing(std::string host, std::string port, unsigned long sequenceNumber, unsigned long timeStamp);
-    bool    initPing(std::string host, std::string port, unsigned long sequenceNumber, unsigned long timeStamp, Q4SMeasurementValues results);
+    bool    initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp);
+    bool    initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp, Q4SMeasurementValues results);
     bool    initBWidth(std::string host, std::string port, unsigned long sequenceNumber);
     void    done( );
 
@@ -116,7 +116,7 @@ private:
     void    makeHeaders(bool isSequenceNumber=false, 
                         unsigned long sequenceNumber=0, 
                         bool isTimeStamp=false, 
-                        unsigned long timeStamp=0, 
+                        uint64_t timeStamp=0, 
                         bool isStage=false, 
                         unsigned long stage=0,
                         bool isMeaurements=false,

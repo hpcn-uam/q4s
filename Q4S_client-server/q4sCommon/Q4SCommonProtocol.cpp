@@ -8,36 +8,40 @@
 
 
 
-void Q4SCommonProtocol::calculateLatency(Q4SMessageManager &mReceivedMessages, std::vector<unsigned long> &arrSentPingTimestamps, float &latency, unsigned long pingsSent, bool showMeasureInfo)
+void Q4SCommonProtocol::calculateLatency(Q4SMessageManager &mReceivedMessages, std::vector<uint64_t> &arrSentPingTimestamps, float &latency, unsigned long pingsSent, bool showMeasureInfo)
 {
     Q4SMessageInfo messageInfo;
     std::vector<float> arrPingLatencies;
     float actualPingLatency;
     int pingIndex = 0;
     int pingMaxCount = pingsSent;
-
+    bool ok= true; 
+    int sequenceNumberPing; 
+    uint64_t TimeStampPing; 
     // Prepare for Latency calculation
     for( pingIndex = 0; pingIndex < pingMaxCount; pingIndex++ )
     {
-        if( mReceivedMessages.read200OKMessage( messageInfo, true ) == true )
+        if( mReceivedMessages.read200OKMessage( messageInfo, true, &TimeStampPing, &sequenceNumberPing ) == true )
         {
             // Actual ping latency calculation
-            actualPingLatency = (messageInfo.timeStamp - arrSentPingTimestamps[ pingIndex ])/ 2.0f;
+            //printf("TIEMPO 200 0k: %"PRIu64"\nTIEMPO PING: %"PRIu64"\n",messageInfo.timeStamp, TimeStampPing);
+
+            
+            actualPingLatency = (messageInfo.timeStamp - TimeStampPing)/ 2.0f;
             //printf("TIEMPO 200 0k: %lu\nTIEMPO PING: %lu\n",messageInfo.timeStamp, arrSentPingTimestamps[ pingIndex ]);
             // Latency store
             arrPingLatencies.push_back( actualPingLatency );
 
-            if (showMeasureInfo)
-            {
+            #if SHOW_INFO2
+            
                 printf( "PING %d actual ping latency: %.3f\n", pingIndex, actualPingLatency );
-            }
+            #endif
         }
         else
         {
-            if (showMeasureInfo)
-            {
+            #if SHOW_INFO2
                 printf( "PING RESPONSE %d message lost\n", pingIndex);
-            }
+            #endif
         }
     }
 
@@ -57,9 +61,9 @@ void Q4SCommonProtocol::calculateJitter(
     int pingIndex = 0;
     int pingMaxCount = pingsSent;
     Q4SMessageInfo messageInfo;
-    std::vector<unsigned long> arrReceivedPingTimestamps;
+    std::vector<uint64_t> arrReceivedPingTimestamps;
     std::vector<unsigned long> arrPingJitters;
-    unsigned long actualPingTimeWithPrevious;
+    uint64_t actualPingTimeWithPrevious;
     unsigned long packetLossCount = 0;
 
     // Prepare for Jitter calculation
@@ -75,12 +79,11 @@ void Q4SCommonProtocol::calculateJitter(
                 actualPingTimeWithPrevious = ( arrReceivedPingTimestamps[ pingIndex ] - arrReceivedPingTimestamps[ pingIndex - 1 ] );
 
                 // Actual time between this ping and previous store
-                arrPingJitters.push_back( (unsigned long)abs((double)actualPingTimeWithPrevious - (double)timeBetweenPings) );
+                arrPingJitters.push_back( (uint64_t)abs((double)actualPingTimeWithPrevious - (double)timeBetweenPings) );
 
-                if (showMeasureInfo)
-                {
+                #if SHOW_INFO2
                     printf( "PING %d ET: %.3f\n", pingIndex, actualPingTimeWithPrevious );
-                }
+                #endif
             }
         }
         else
@@ -93,12 +96,11 @@ void Q4SCommonProtocol::calculateJitter(
             unsigned long jitterOfPacketLoss = 2 * timeBetweenPings;
             arrPingJitters.push_back(jitterOfPacketLoss);
 
-            unsigned long timeOfPacketLoss = arrReceivedPingTimestamps[ pingIndex - 1 ] + timeBetweenPings;
+            uint64_t timeOfPacketLoss = arrReceivedPingTimestamps[ pingIndex - 1 ] + timeBetweenPings;
             arrReceivedPingTimestamps.push_back(timeOfPacketLoss);
-            if (showMeasureInfo)
-            {
+            #if SHOW_INFO2
                 printf( "PING %d message lost\n", pingIndex);
-            }
+            #endif
         }
     }
 
@@ -110,10 +112,9 @@ void Q4SCommonProtocol::calculateJitter(
         packetLoss = ((float)packetLossCount/ (float)(pingsSent)) * 100.f;
     }
 
-    if (showMeasureInfo)
-    {
+    #if SHOW_INFO2
         printf( "Time With previous ping mean: %.3f\n", jitter );
-    }
+    #endif
 }
 void Q4SCommonProtocol::calculateJitterStage0(
     Q4SMessageManager &mReceivedMessages, 
@@ -138,10 +139,10 @@ void Q4SCommonProtocol::calculateJitterAndPacketLossContinuity(
     calculateJitter(mReceivedMessages, jitter, timeBetweenPings, pingsSent, true, packetLoss, showMeasureInfo);
 }
 
-std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<unsigned long> &TimeStamplist)
+std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<uint64_t> &TimeStamplist)
 {
     std::set<unsigned long> recivedSequenceNumberList;
-    unsigned long timeStamp; 
+    uint64_t timeStamp; 
     unsigned long messageSequenceNumber;
 
     while (mReceivedMessages.readBandWidthMessage(messageSequenceNumber, true, &timeStamp) )
@@ -157,10 +158,10 @@ std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMes
 }
 
 
-bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss, unsigned long bandwidthTime, float &bandwidth)
+bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss, uint64_t bandwidthTime, float &bandwidth)
 {
     bool ok = false;
-    std::set<unsigned long> TimeStamplist;
+    std::set<uint64_t> TimeStamplist;
     packetLoss = 0;
     std::set<unsigned long> recivedSequenceNumberList = obtainSortedSequenceNumberList(mReceivedMessages, TimeStamplist);
 
@@ -170,10 +171,10 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
         unsigned long prevSequenceNumber = 0;
         unsigned long listIndex = 0;
         unsigned long sequenceNumber = 0;        
-        unsigned long TimeStampInit;
-        unsigned long TimeStampEnd;
+        uint64_t TimeStampInit;
+        uint64_t TimeStampEnd;
 
-        std::set<unsigned long>::iterator itTimeStamp;
+        std::set<uint64_t>::iterator itTimeStamp;
 
         std::set<unsigned long>::iterator it;
         unsigned long totalPacketSent;
@@ -190,7 +191,7 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
                 packetLossCount += (*it - sequenceNumber);
                 sequenceNumber = *it;
                 sequenceNumber++;
-                printf("sequenceNumber Perdido: %lu, numero de paquetes perdidos en total: %lu\n", sequenceNumber, packetLossCount );
+                //printf("sequenceNumber Perdido: %lu, numero de paquetes perdidos en total: %lu\n", sequenceNumber, packetLossCount );
             }
             else
             {
@@ -205,7 +206,7 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
                 itTimeStamp++; 
             }
         }
-        printf("NUmero total de paquetes recibidos%lu\n", sequenceNumber);
+        //printf("NUmero total de paquetes recibidos%lu\n", sequenceNumber);
 
         if (totalPacketSent > 0)
         {
@@ -216,7 +217,7 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
         
         //printf("timestamp end: %lu\n", TimeStampEnd);
         //printf("timestamp begin: %lu\n", TimeStampInit);
-        printf("DIFERENCIA TIMESTAMP: %f\n", ATimestamp);       
+        //printf("DIFERENCIA TIMESTAMP: %f\n", ATimestamp);       
         float numberOfkilobytesPerSecond = (float)sequenceNumber * 1000.f / (ATimestamp);//1066
         float kilobitsPerSecond = numberOfkilobytesPerSecond * 8;
         bandwidth = kilobitsPerSecond;
@@ -232,14 +233,18 @@ bool Q4SCommonProtocol::checkStage0(unsigned long maxLatency, unsigned long maxJ
     if ( results.values.latency > (float)maxLatency )
     {
         results.latencyAlert = true;
-        printf( "Lantecy limits not reached: %d\n", maxLatency);
+        #if SHOW_INFO
+            printf( "Lantecy limits not reached: %d\n", maxLatency);
+        #endif
         ok = false;
     }
 
     if ( results.values.jitter > (float)maxJitter)
     {
         results.jitterAlert = true;
-        printf( "Jitter limits not reached: %d\n", maxJitter);
+        #if SHOW_INFO
+            printf( "Jitter limits not reached: %d\n", maxJitter);
+        #endif
         ok = false;
     }
 
@@ -264,14 +269,18 @@ bool Q4SCommonProtocol::checkStage1(unsigned long bandwidth, float packetLoss, Q
     if ( results.values.bandwidth <= (float)bandwidth )
     {
         results.bandwidthAlert = true;
-        printf( "BandWidth limits not reached: %d\n", bandwidth);
+        #if SHOW_INFO
+            printf( "BandWidth limits not reached: %d\n", bandwidth);
+        #endif
         ok = false;
     }
 
     if ( results.values.packetLoss > packetLoss)
     {
         results.packetLossAlert = true;
-        printf( "PacketLoss limits not reached: %.3f\n", packetLoss);
+        #if SHOW_INFO
+            printf( "PacketLoss limits not reached: %.3f\n", packetLoss);
+        #endif
         ok = false;
     }
 
@@ -296,21 +305,27 @@ bool Q4SCommonProtocol::checkContinuity(unsigned long maxLatency, unsigned long 
     if ( results.values.latency > (float)maxLatency )
     {
         results.latencyAlert = true;
-        printf( "Lantecy limits not reached: %d\n", maxLatency);
+        #if SHOW_INFO
+            printf( "Lantecy limits not reached: %d\n", maxLatency);
+        #endif
         ok = false;
     }
 
     if ( results.values.jitter > (float)maxJitter)
     {
         results.jitterAlert = true;
-        printf( "Jitter limits not reached: %d\n", maxJitter);
+        #if SHOW_INFO
+            printf( "Jitter limits not reached: %d\n", maxJitter);
+        #endif
         ok = false;
     }
 
     if ( results.values.packetLoss > maxPacketLoss)
     {
         results.packetLossAlert = true;
-        printf( "PacketLoss limits not reached: %.3f\n", maxPacketLoss);
+        #if SHOW_INFO
+            printf( "PacketLoss limits not reached: %.3f\n", maxPacketLoss);
+        #endif
         ok = false;
     }
 
@@ -334,47 +349,48 @@ bool Q4SCommonProtocol::checkContinuity(
 
 void Q4SCommonProtocol::showCheckMessage(Q4SMeasurementResult &upResults, Q4SMeasurementResult &downResults)
 {
-    if (downResults.latencyAlert)
-    {
-        printf( "Lantecy Down bad value: %0.3f\n", downResults.values.latency);
-    }
+    #if SHOW_INFO
+        if (downResults.latencyAlert)
+        {
+            printf( "Lantecy Down bad value: %0.3f\n", downResults.values.latency);
+        }
 
-    if (downResults.jitterAlert)
-    {
-        printf( "Jitter Down bad value: %0.3f\n", downResults.values.jitter);
-    }
+        if (downResults.jitterAlert)
+        {
+            printf( "Jitter Down bad value: %0.3f\n", downResults.values.jitter);
+        }
 
-    if (downResults.bandwidthAlert)
-    {
-        printf( "BandWidth Down bad value: %0.2f\n", downResults.values.bandwidth);
-    }
+        if (downResults.bandwidthAlert)
+        {
+            printf( "BandWidth Down bad value: %0.2f\n", downResults.values.bandwidth);
+        }
 
-    if (downResults.packetLossAlert)
-    {
-        printf( "PacketLoss Down bad value: %0.3f\n", downResults.values.packetLoss);
-    }
+        if (downResults.packetLossAlert)
+        {
+            printf( "PacketLoss Down bad value: %0.3f\n", downResults.values.packetLoss);
+        }
 
-    if (upResults.latencyAlert)
-    {
-        printf( "Lantecy Up bad value: %0.3f\n", upResults.values.latency);
-    }
+        if (upResults.latencyAlert)
+        {
+            printf( "Lantecy Up bad value: %0.3f\n", upResults.values.latency);
+        }
 
-    if (upResults.jitterAlert)
-    {
-        printf( "Jitter Up bad value: %0.3f\n", upResults.values.jitter);
-    }
+        if (upResults.jitterAlert)
+        {
+            printf( "Jitter Up bad value: %0.3f\n", upResults.values.jitter);
+        }
 
-    if (upResults.bandwidthAlert)
-    {
-        printf( "BandWidth Up bad value: %0.2f\n", upResults.values.bandwidth);
-    }
+        if (upResults.bandwidthAlert)
+        {
+            printf( "BandWidth Up bad value: %0.2f\n", upResults.values.bandwidth);
+        }
 
-    if (upResults.packetLossAlert)
-    {
-        printf( "PacketLoss Up bad value: %0.3f\n", upResults.values.packetLoss);
-    }
+        if (upResults.packetLossAlert)
+        {
+            printf( "PacketLoss Up bad value: %0.3f\n", upResults.values.packetLoss);
+        }
+    #endif
 }
-
 std::string Q4SCommonProtocol::generateAlertMessage(Q4SSDPParams params, Q4SMeasurementResult &upResults, Q4SMeasurementResult &downResults)
 {
     //Alert

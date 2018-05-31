@@ -99,6 +99,39 @@ bool Q4SSocket::sendData( const char* sendBuffer, sockaddr_in* pAddrInfo, bool s
     return ok;
 }
 
+bool Q4SSocket::sendBWData( const char* sendBuffer, sockaddr_in* pAddrInfo)
+{
+    //Bind the socket.
+    int     iResult;
+    bool    ok = true;
+
+    // Send the buffer
+    sockaddr*   addrInfoToUse;
+    int         addrInfoLenToUse;
+    // In client connections, we send prior to receive, we haven't peer info. We define it.
+    if( pAddrInfo != NULL )
+    {
+        addrInfoToUse = ( sockaddr* )pAddrInfo;
+        addrInfoLenToUse = sizeof( *pAddrInfo );
+    }
+    else
+    {
+        addrInfoToUse = ( sockaddr* )&mPeerAddrInfo;
+        addrInfoLenToUse = mPeerAddrInfoLen;
+    }
+    iResult = sendto( mSocket, sendBuffer, (int)strlen( sendBuffer ), 0, addrInfoToUse, addrInfoLenToUse );
+ 
+    if( iResult <= 0 )
+    {
+        printf( "send failed with error" );
+        disconnect( );
+        ok &= false;
+    }
+
+    return ok;
+}
+
+
 bool Q4SSocket::receiveData( char* receiveBuffer, int receiveBufferSize, sockaddr_in* pAddrInfo, bool showInfo)
 {
     //Listen on the socket for a client.

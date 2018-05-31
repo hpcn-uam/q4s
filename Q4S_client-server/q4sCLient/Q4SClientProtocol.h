@@ -5,6 +5,7 @@
 #include <vector>
 #include "../q4sCommon/Q4SStructs.h"
 #include <signal.h>
+#include <unistd.h>
 class Q4SClientProtocol: Q4SCommonProtocol
 {
 public:
@@ -36,11 +37,10 @@ private:
     void    cancel();
     bool    measureStage0(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &downResults,unsigned long pingsToSend);
     bool    measureContinuity(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &downResults, unsigned long pingsToSend);
-    bool    sendRegularPings(std::vector<unsigned long> &arrSentPingTimestamps, unsigned long pingsToSend, unsigned long timeBetweenPings);
+    bool    sendRegularPings(std::vector<uint64_t> &arrSentPingTimestamps, unsigned long pingsToSend, unsigned long timeBetweenPings);
     bool    measureStage1(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &downResults);
 
     bool            interchangeMeasurementProcedure(Q4SMeasurementValues &downMeasurements, Q4SMeasurementResult results);
-    void            sighand(int signo);
     void*           manageBWReceivedData( );    
     static void*    manageBWReceivedDataFn( void* lpData);    
     void*           manageUdpReceivedData( );    
@@ -58,8 +58,8 @@ private:
     pthread_t                   marrthrHandle[ 2 ]; 
     int                         qosLevel;
     int                         qosLevelMax; 
-    unsigned long               lastAlertTimeStamp;
-    unsigned long               recoveryTimeStamp;
+    uint64_t                    lastAlertTimeStamp;
+    uint64_t                    recoveryTimeStamp;
     sem_t                       UDPSem; 
     pthread_t                   sendUDPBW_thread; 
 

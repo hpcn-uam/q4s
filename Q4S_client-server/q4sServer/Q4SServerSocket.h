@@ -28,7 +28,7 @@ public:
     bool    startUdpListening( );
     bool    sendUdpData( int connectionId, const char* sendBuffer );
     bool    receiveUdpData( char* receiveBuffer, int receiveBufferSize, int& connectionId );
-
+    bool    sendUdpBWData( int connectionId, const char* sendBuffer );
     bool    startAlertSender( );
     bool    sendAlertData( const char* sendBuffer );
 

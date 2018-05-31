@@ -4,21 +4,20 @@
 
 int main(int argc, char *argv[]) 
 {
-	bool ok = true;
+	bool ok;
 
     Q4SServerStateManager q4SServerStateManager;
 
-    ok &= q4SServerStateManager.init();
-    printf("Server\n"); 
-    
-    if (ok)
-    {
-        q4SServerStateManager.run();
-    }
-    sleep( (int)q4SServerConfigFile.timeEndApp/1000);
 
-    printf( "Saliendo de Server\n" );
-    system("pause");
+	ok = true;
+	ok &= q4SServerStateManager.init();
+
+	if (ok)
+	{
+		q4SServerStateManager.run();
+	}
+
+    
 
     return 0;
 }

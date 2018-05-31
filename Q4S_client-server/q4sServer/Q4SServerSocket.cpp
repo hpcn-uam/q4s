@@ -30,7 +30,9 @@ bool Q4SServerSocket::startAlertSender()
     if( ok )
     {
         mq4sAlertSocket.setSocket( mAlertSocket, SOCK_DGRAM, &q4SServerConfigFile.agentIP, &q4SServerConfigFile.agentPort );
+        #if SHOW_INFO
         printf( "Prepared for sending alerts at: %s\n", q4SServerConfigFile.agentPort.c_str() );
+        #endif 
     }
     return ok;
 }
@@ -119,10 +121,10 @@ bool Q4SServerSocket::stopWaiting( )
 
     if( ok )
     {
-        ok &= closeListenSocket( );        
+        //ok &= closeListenSocket( );        
         close(mAlertSocket);
         close(mUdpSocket);
-
+        close(mListenSocket);
 
 
     }
@@ -165,6 +167,20 @@ bool Q4SServerSocket::sendUdpData( int connectionId, const char* sendBuffer )
     return ok;
 }
 
+bool Q4SServerSocket::sendUdpBWData( int connectionId, const char* sendBuffer )
+{
+    bool                ok = true;
+    Q4SConnectionInfo*  pQ4SConnInfo;
+
+    ok &= getConnectionInfo( connectionId, pQ4SConnInfo );
+    if( ok )
+    {
+        ok &= mq4sUdpSocket.sendBWData( sendBuffer, &( pQ4SConnInfo->peerUdpAddrInfo ) );
+    }
+
+    return ok;
+}
+
 bool Q4SServerSocket::startUdpListening( )
 {
     bool ok = true;
@@ -184,7 +200,9 @@ bool Q4SServerSocket::startUdpListening( )
     if( ok )
     {
         mq4sUdpSocket.setSocket( mUdpSocket, SOCK_DGRAM );
+        #if SHOW_INFO
         printf( "Listening UDP at: %s\n", q4SServerConfigFile.defaultUDPPort.c_str() );
+        #endif
     }
 
     return ok;
@@ -347,6 +365,8 @@ bool Q4SServerSocket::createListenSocket( )
     {
         // Create a SOCKET for the server to listen for client connections
         mListenSocket = socket( mpAddrInfoResultTcp->ai_family, mpAddrInfoResultTcp->ai_socktype, mpAddrInfoResultTcp->ai_protocol );
+        int optval= 1; 
+        setsockopt(mListenSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
         if( mListenSocket <=0 ) 
         {
             //printf( "Error at socket(): %ld\n", WSAGetLastError( ) );

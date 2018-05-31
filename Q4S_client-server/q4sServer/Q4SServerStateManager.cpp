@@ -20,9 +20,9 @@ bool Q4SServerStateManager::init()
     done();
     
     bool ok = true;
-
+    stop = false; 
     // Init first state
-    ok &= stateInit ( Q4SSERVERSTATE_INIT );
+    ok &= stateInit( Q4SSERVERSTATE_INIT );
 
     return ok;
 }
@@ -43,10 +43,8 @@ bool Q4SServerStateManager::run()
     bool ok = true;
 
     // TODO: set out condition
-    
     while (!stop) 
     {
-        
         bool stateInitOk = stateInit(nextState);
         if ( stateInitOk )
         {
@@ -71,7 +69,9 @@ bool Q4SServerStateManager::stateInit (Q4SServerState state)
                 if (initOk)
                 {
                     nextState = Q4SSERVERSTATE_HANDSHAKE;
-                    printf("Hemos llegado a handshake\n");
+                    #if SHOW_INFO
+                        printf("Hemos llegado a handshake\n");
+                    #endif
                 }
                 else
                 {
@@ -83,18 +83,22 @@ bool Q4SServerStateManager::stateInit (Q4SServerState state)
 
         case Q4SSERVERSTATE_HANDSHAKE:
             {
-                printf("waiting");
                 bool beginOk = Q4SServerProtocol::handshake(mParams);
 
                 if (beginOk)
                 {
-                    nextState = Q4SSERVERSTATE_NEGOTIATION;
+                    nextState = Q4SSERVERSTATE_NEGOTIATION;                    
+                    #if SHOW_INFO
+
                     printf("Hemos llegado a la negociacion\n");
+                    #endif
                 }   
                 else
                 {
                     nextState = Q4SSERVERSTATE_TERMINATION;
-                    printf("Hemos llegado a la terminacion 2\n");
+                    #if SHOW_INFO
+                    printf("Hemosllegado a la terminacion 2\n");
+                    #endif
                 }
                 
             }
@@ -107,18 +111,14 @@ bool Q4SServerStateManager::stateInit (Q4SServerState state)
                 if (measureOk)
                 {
                     nextState = Q4SSERVERSTATE_CONTINUITY;
-
                 } 
                    
-                      
                 else
                 {
-                    printf("going to \n");
                     std::string alertMessage;
-                    alertMessage= "Latency: " + std::to_string((long double)results.values.latency) + " Jitter: " + std::to_string((long double)results.values.jitter);
-
+                    //alertMessage= "Latency: " + std::to_string((long double)results.values.latency) + " Jitter: " + std::to_string((long double)results.values.jitter);
                     //Alert
-                    Q4SServerProtocol::alert(alertMessage);
+                    //Q4SServerProtocol::alert(alertMessage);
                     nextState = Q4SSERVERSTATE_TERMINATION;
                 }                              
             }
@@ -128,14 +128,11 @@ bool Q4SServerStateManager::stateInit (Q4SServerState state)
                 bool readyOk = Q4SServerProtocol::ready(mParams);
                 if (readyOk)
                 {
-                    printf("continuity 1\n");
 
                     Q4SServerProtocol::continuity(mParams);
-                    printf("continuity 2\n");
                 }
 
                 std::string alertMessage;
-                printf("continuity 3\n");
                 alertMessage= "Continuity end";
                 Q4SServerProtocol::alert(alertMessage);
 
@@ -147,13 +144,13 @@ bool Q4SServerStateManager::stateInit (Q4SServerState state)
 
         case Q4SSERVERSTATE_TERMINATION:
             {
-                printf("Hemos llegado a la terminacion\n");
                 std::string alertMessage;
                 alertMessage= "Termination";
                 Q4SServerProtocol::alert(alertMessage);
                 //Q4SServerProtocol::end();
-                //Q4SServerProtocol::done();
+                Q4SServerProtocol::done();
                 stop = true;
+
             }
         break;
 

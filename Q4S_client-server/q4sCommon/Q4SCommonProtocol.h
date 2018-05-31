@@ -6,7 +6,8 @@
 #include <set>
 #include "Q4SSDPParams.h"
 #include <algorithm> 
-
+#include <inttypes.h>
+#include <stdint.h>
 class Q4SMessageManager;
 
 class Q4SCommonProtocol
@@ -16,7 +17,7 @@ class Q4SCommonProtocol
 
         void    calculateLatency(
 									Q4SMessageManager &mReceivedMessages, 
-									std::vector<unsigned long> &arrSentPingTimestamps, 
+									std::vector<uint64_t> &arrSentPingTimestamps, 
 									float &latency, 
 									unsigned long pingsSent, 
 									bool showMeasureInfo=true);
@@ -33,7 +34,7 @@ class Q4SCommonProtocol
 												unsigned long pingsSent, 
 												float &packetLoss, 
 												bool showMeasureInfo=true);
-        bool    calculateBandwidthPacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss, unsigned long bandwidthTime, float &bandwidth);
+        bool    calculateBandwidthPacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss, uint64_t bandwidthTime, float &bandwidth);
         bool    checkStage0(unsigned long maxLatencyUp, unsigned long maxJitterUp, 
 			unsigned long maxLatencyDown, unsigned long maxJitterDown, 
 			Q4SMeasurementResult &upResults, 
@@ -64,7 +65,7 @@ class Q4SCommonProtocol
 								bool calculatePacketLoss, 
 								float &packetLoss, 
 								bool showMeasureInfo);
-		std::set<unsigned long> obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<unsigned long> &TimeStamplist);
+		std::set<unsigned long> obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<uint64_t> &TimeStamplist);
 		int contador= 0; 
 	/*
 	// TEST

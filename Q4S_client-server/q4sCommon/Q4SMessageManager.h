@@ -19,14 +19,14 @@ class Q4SMessageManager
     void    done( );
 
     // Add message
-    void addMessage( std::string &message, unsigned long timestamp = 0 );
+    void addMessage( std::string &message, uint64_t timestamp = 0 );
     
     bool readCancelMessage();
     bool readFirst( std::string &firstMessage );
     bool readMessage( std::string& pattern, Q4SMessageInfo& messageInfo, bool erase );
     bool readPingMessage( int pingIndex, Q4SMessageInfo& messageInfo, bool erase );
-    bool read200OKMessage( Q4SMessageInfo& messageInfo, bool erase );
-    bool readBandWidthMessage(unsigned long &sequenceNumber, bool erase, unsigned long *timestampBW);
+    bool read200OKMessage( Q4SMessageInfo& messageInfo, bool erase, uint64_t *TimestampPing, int *sequenceNumberPing  );
+    bool readBandWidthMessage(unsigned long &sequenceNumber, bool erase, uint64_t *timestampBW);
     bool readmMessages();
     int size() const;
 

@@ -18,7 +18,7 @@ bool Q4SMessage::initRequest(
    std::string host, 
    std::string port, 
    bool isSequenceNumber, unsigned long sequenceNumber, 
-   bool isTimeStamp, unsigned long timeStamp, 
+   bool isTimeStamp, uint64_t timeStamp, 
    bool isStage, unsigned long stage,
    bool isMeaurements,Q4SMeasurementValues *values)
  {
@@ -46,7 +46,7 @@ bool Q4SMessage::initRequest(
    std::string host, 
    std::string port, 
    bool isSequenceNumber, unsigned long sequenceNumber, 
-   bool isTimeStamp, unsigned long timeStamp, 
+   bool isTimeStamp, uint64_t timeStamp, 
    bool isStage, unsigned long stage,
    Q4SSDPParams q4SSDPParams)
 {
@@ -95,12 +95,13 @@ bool Q4SMessage::initResponse(Q4SResponseCode q4SResponseCode, std::string reaso
 bool Q4SMessage::init200OKBeginResponse(Q4SSDPParams q4SSDPParams) 
 {
     bool ok = true;
-    ok  &= initResponse(Q4SRESPONSECODE_200, "OK");
+    //sprintf(mMesZZsage, "200 OK\n%s%lu/%lu\n",QOSLEVEL_PATTERN, params.qosLevelUp, params.qosLevelDown, ALERTINGMODE_PATTERN, params.q4SSDPAlertingMode);
+    mMessage="Q4S/1.0 200 OK\n";
     mMessage.append(Q4SSDP_create(q4SSDPParams));
     return ok;
 }
 
-bool Q4SMessage::initPing(std::string host, std::string port, unsigned long sequenceNumber, unsigned long timeStamp)
+bool Q4SMessage::initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp)
 {
     bool ok = true;
 
@@ -109,7 +110,7 @@ bool Q4SMessage::initPing(std::string host, std::string port, unsigned long sequ
     return ok;
 }
 
-bool Q4SMessage::initPing(std::string host, std::string port, unsigned long sequenceNumber, unsigned long timeStamp, Q4SMeasurementValues results)
+bool Q4SMessage::initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp, Q4SMeasurementValues results)
 {
     bool ok = true;
 
@@ -229,7 +230,7 @@ void Q4SMessage::makeFirstLineRequestURI(std::string host, std::string port)
 
 void Q4SMessage::makeHeaders(
     bool isSequenceNumber, unsigned long sequenceNumber, 
-    bool isTimeStamp, unsigned long timeStamp, 
+    bool isTimeStamp, uint64_t timeStamp, 
     bool isStage, unsigned long stage,
     bool isMeaurements,
     Q4SMeasurementValues *values)
@@ -249,7 +250,7 @@ void Q4SMessage::makeHeaders(
     if (isTimeStamp)
     {
         mMessage.append("Timestamp:");
-        mMessage.append(std::to_string((unsigned long long int)timeStamp));
+        mMessage.append(std::to_string((uint64_t)timeStamp));
         mMessage.append("\n");
     }
 

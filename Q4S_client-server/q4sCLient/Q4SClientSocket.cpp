@@ -90,6 +90,13 @@ bool Q4SClientSocket::receiveTcpData( char* receiveBuffer, int receiveBufferSize
     return mq4sTcpSocket.receiveData( receiveBuffer, receiveBufferSize, NULL, q4SClientConfigFile.showSocketReceivedInfo );
 }
 
+
+bool Q4SClientSocket::sendUdpBWData( const char* sendBuffer )
+{
+    return mq4sUdpSocket.sendBWData( sendBuffer );
+}
+
+
 bool Q4SClientSocket::sendUdpData( const char* sendBuffer )
 {
     return mq4sUdpSocket.sendData( sendBuffer );

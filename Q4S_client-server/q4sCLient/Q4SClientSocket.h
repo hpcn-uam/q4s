@@ -19,7 +19,7 @@ public:
     bool    receiveTcpData( char* receiveBuffer, int receiveBufferSize );
     bool    sendUdpData( const char* sendBuffer );
     bool    receiveUdpData( char* receiveBuffer, int receiveBufferSize );
-
+    bool    sendUdpBWData( const char* sendBuffer );
 
 private:
 

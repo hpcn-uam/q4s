@@ -9,7 +9,7 @@
 struct Q4SMessageInfo 
 {
     std::string     message;
-    unsigned long   timeStamp;
+    uint64_t   		timeStamp;
 };
 
 #endif //_Q4SMESSAGEINFO_h_

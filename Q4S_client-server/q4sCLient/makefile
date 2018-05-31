@@ -6,7 +6,16 @@ FILE_CLIENT= Q4SClientConfigFile.cpp Q4SClient.cpp  Q4SClientProtocol.cpp Q4SCli
 DEBUG_FLAGS= -DDEBUG
 OBJ=Q4SClient
 FLAGS= -pthread
+ifeq ($(SHOW_INFO), 1)  #at this point, the makefile checks if FEATURE is enabled
+SHOW1 = -DSHOW_INFO 
+endif
+ifeq ($(SHOW_INFO2), 1)  #at this point, the makefile checks if FEATURE is enabled
+SHOW2 = -DSHOW_INFO2 
+endif
+ifeq ($(SAVE_INFO), 1)  #at this point, the makefile checks if FEATURE is enabled
+SAVE = -DSAVE_INFO 
+endif
 all:
-	$(CC) -O3 $(HEADERS_COMMON) $(HEADERS_CLIENT) $(FILE_COMMON) $(FILE_CLIENT) $(DEBUG_FLAGS) $(FLAGS) -o $(OBJ)
+	$(CC) -O3 $(HEADERS_COMMON) $(HEADERS_CLIENT) $(FILE_COMMON) $(FILE_CLIENT) $(DEBUG_FLAGS) $(FLAGS) -o $(OBJ) $(SHOW1) $(SHOW2) $(SAVE)
 clean:
 	rm -rf $(OBJ) *~* 

@@ -30,7 +30,7 @@ bool Q4SClientStateManager::init()
 
 void Q4SClientStateManager::done()
 {
-
+    Q4SClientProtocol::done(); 
 }
 
 
@@ -90,27 +90,28 @@ bool Q4SClientStateManager::stateInit (Q4SClientState state)
                 bool beginOk = Q4SClientProtocol::handshake(mParams);                
                 if (beginOk)
                 {
-                    printf( "Limits - Latency: %d\n", mParams.latency);
-                    printf( "Limits - Jitter Up: %d\n", mParams.jitterUp);
-                    printf( "Limits - Jitter Down: %d\n", mParams.jitterDown);
-                    printf( "Limits - Bandwidth Up: %d\n", mParams.bandWidthUp);
-                    printf( "Limits - Bandwidth Down: %d\n", mParams.bandWidthDown);
-                    printf( "Limits - PacketLoss Up: %.3f\n", mParams.packetLossUp);
-                    printf( "Limits - PacketLoss Down: %.3f\n", mParams.packetLossDown);
-                    printf( "Params - QOSLevelDown: %d\n", mParams.qosLevelDown);
-                    printf( "Params - QOSLevelUp: %d\n", mParams.qosLevelUp);
-                    printf( "Params - AlertPause: %lu\n", mParams.alertPause);
-                    printf( "Params - RecoveryPause: %lu\n", mParams.recoveryPause);
-                    printf( "Params - NegotiationTimeBetweenPings Up: %lu\n", mParams.procedure.negotiationTimeBetweenPingsUplink);
-                    printf( "Params - NegotiationTimeBetweenPings Down: %lu\n", mParams.procedure.negotiationTimeBetweenPingsDownlink);
-                    printf( "Params - ContinuityTimeBetweenPings Up: %lu\n", mParams.procedure.continuityTimeBetweenPingsUplink);
-                    printf( "Params - ContinuityTimeBetweenPings Down: %lu\n", mParams.procedure.continuityTimeBetweenPingsDownlink);
-                    printf( "Params - BandWidthTime: %lu\n", mParams.procedure.bandwidthTime);
-                    printf( "Params - WindowSizeLatencyCalc Up: %lu\n", mParams.procedure.windowSizeLatencyCalcUplink);
-                    printf( "Params - WindowSizeLatencyCalc Down: %lu\n", mParams.procedure.windowSizeLatencyCalcDownlink);
-                    printf( "Params - WindowSizePacketLossCalc Up: %lu\n", mParams.procedure.windowSizePacketLossCalcUplink);
-                    printf( "Params - WindowSizePacketLossCalc Down: %lu\n", mParams.procedure.windowSizePacketLossCalcDownlink);
-                    
+                    #if SHOW_INFO
+                        printf( "Limits - Latency: %d\n", mParams.latency);
+                        printf( "Limits - Jitter Up: %d\n", mParams.jitterUp);
+                        printf( "Limits - Jitter Down: %d\n", mParams.jitterDown);
+                        printf( "Limits - Bandwidth Up: %d\n", mParams.bandWidthUp);
+                        printf( "Limits - Bandwidth Down: %d\n", mParams.bandWidthDown);
+                        printf( "Limits - PacketLoss Up: %.3f\n", mParams.packetLossUp);
+                        printf( "Limits - PacketLoss Down: %.3f\n", mParams.packetLossDown);
+                        printf( "Params - QOSLevelDown: %d\n", mParams.qosLevelDown);
+                        printf( "Params - QOSLevelUp: %d\n", mParams.qosLevelUp);
+                        printf( "Params - AlertPause: %lu\n", mParams.alertPause);
+                        printf( "Params - RecoveryPause: %lu\n", mParams.recoveryPause);
+                        printf( "Params - NegotiationTimeBetweenPings Up: %lu\n", mParams.procedure.negotiationTimeBetweenPingsUplink);
+                        printf( "Params - NegotiationTimeBetweenPings Down: %lu\n", mParams.procedure.negotiationTimeBetweenPingsDownlink);
+                        printf( "Params - ContinuityTimeBetweenPings Up: %lu\n", mParams.procedure.continuityTimeBetweenPingsUplink);
+                        printf( "Params - ContinuityTimeBetweenPings Down: %lu\n", mParams.procedure.continuityTimeBetweenPingsDownlink);
+                        printf( "Params - BandWidthTime: %lu\n", mParams.procedure.bandwidthTime);
+                        printf( "Params - WindowSizeLatencyCalc Up: %lu\n", mParams.procedure.windowSizeLatencyCalcUplink);
+                        printf( "Params - WindowSizeLatencyCalc Down: %lu\n", mParams.procedure.windowSizeLatencyCalcDownlink);
+                        printf( "Params - WindowSizePacketLossCalc Up: %lu\n", mParams.procedure.windowSizePacketLossCalcUplink);
+                        printf( "Params - WindowSizePacketLossCalc Down: %lu\n", mParams.procedure.windowSizePacketLossCalcDownlink);
+                    #endif
                     nextState = Q4SCLIENTSTATE_NEGOTIATION;
                 }
                 else
@@ -160,7 +161,7 @@ bool Q4SClientStateManager::stateInit (Q4SClientState state)
         case Q4SCLIENTSTATE_TERMINATION:
             {
                 printf("Termination state\n");
-                //Q4SClientProtocol::done( );
+                Q4SClientProtocol::done( );
                 stop = true;
             }
         break;

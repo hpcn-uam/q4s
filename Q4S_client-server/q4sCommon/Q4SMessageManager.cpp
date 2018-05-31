@@ -37,7 +37,7 @@ void Q4SMessageManager::clear( )
 }
 
 
-void Q4SMessageManager::addMessage( std::string &message, unsigned long timestamp )
+void Q4SMessageManager::addMessage( std::string &message, uint64_t timestamp )
 {
     /*bool signal = false;
     
@@ -76,12 +76,10 @@ bool Q4SMessageManager::readFirst( std::string &firstMessage )
     {
         firstMessage = mMessages.front().message;
         mMessages.pop_front();
-        if( mMessages.size( ) == 0 )
-        {
-        }
+
     }
     pthread_mutex_unlock (&mut_section);
-
+    //sem_post(&mevMessageReady); 
     return ok;
 }
 bool Q4SMessageManager::readmMessages()
@@ -144,7 +142,7 @@ bool Q4SMessageManager::readPingMessage( int pingIndex, Q4SMessageInfo& messageI
     {
         
         int messagePingIndex;
-        unsigned long timeStamp;
+        uint64_t timeStamp;
         if (Q4SMessageTools_isPingMessage(itr_msg->message, &messagePingIndex, &timeStamp))
         {
            if (messagePingIndex == pingIndex)
@@ -176,7 +174,7 @@ bool Q4SMessageManager::readPingMessage( int pingIndex, Q4SMessageInfo& messageI
 
     return found;
 }
-bool Q4SMessageManager::read200OKMessage( Q4SMessageInfo& messageInfo, bool erase )
+bool Q4SMessageManager::read200OKMessage( Q4SMessageInfo& messageInfo, bool erase, uint64_t *TimestampPing, int *sequenceNumberPing  )
 {
     bool    found = false;
     std::list< Q4SMessageInfo >::iterator  itr_msg;
@@ -184,16 +182,20 @@ bool Q4SMessageManager::read200OKMessage( Q4SMessageInfo& messageInfo, bool eras
     sem_wait( &mevMessageReady);
     token=token-1;
     pthread_mutex_lock (&mut_section);
-
+    int messagePingIndex;
+    uint64_t timeStamp;
 
     for( itr_msg = mMessages.begin( ); ( found == false ) && ( itr_msg != mMessages.end( ) ); itr_msg++ )
     {
-       if (Q4SMessageTools_is200OKMessage(itr_msg->message))
+       if (Q4SMessageTools_is200OKMessage(itr_msg->message,  true, &messagePingIndex, &timeStamp))
         {
             // Message found.
             found = true;
             messageInfo.message = itr_msg->message;
             messageInfo.timeStamp = itr_msg->timeStamp;
+            *TimestampPing= timeStamp; 
+            //printf("TimestampPing read200OKMessage:%lu\n", TimestampPing);
+            *sequenceNumberPing= messagePingIndex; 
         }
     }
     if (erase && found)
@@ -216,7 +218,7 @@ bool Q4SMessageManager::read200OKMessage( Q4SMessageInfo& messageInfo, bool eras
     return found;
 }
 
-bool Q4SMessageManager::readBandWidthMessage(unsigned long &sequenceNumber, bool erase, unsigned long *timestampBW)
+bool Q4SMessageManager::readBandWidthMessage(unsigned long &sequenceNumber, bool erase, uint64_t *timestampBW)
 {
     bool    found = false;
     std::list< Q4SMessageInfo >::iterator  itr_msg;
@@ -279,7 +281,7 @@ bool Q4SMessageManager::readCancelMessage()
         {
             // Message found.
             found = true;
-            printf("CANCEL ENCONTRADO\n");
+//printf("CANCEL ENCONTRADO\n");
         }
     }
     

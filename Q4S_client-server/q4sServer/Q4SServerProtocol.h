@@ -45,7 +45,7 @@ private:
     void    cancel();
     bool    measureStage0(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &upResults, unsigned long pingsToSend);
     bool    measureContinuity(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &upResults, unsigned long pingsToSend);
-    bool    sendRegularPings(std::vector<unsigned long> &arrSentPingTimestamps, unsigned long pingsToSend, unsigned long timeBetweenPings);
+    bool    sendRegularPings(std::vector<uint64_t> &arrSentPingTimestamps, unsigned long pingsToSend, unsigned long timeBetweenPings);
     bool    measureStage1(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult upResults);
     bool    interchangeMeasurementProcedure(Q4SMeasurementValues &upMeasurements, Q4SMeasurementResult results);
     Q4SServerSocket             mServerSocket;
@@ -76,9 +76,10 @@ private:
     static void*                sendUDPBWFn(void* BWinfoFn );
     Q4SMessageManager           mReceivedMessages;
     unsigned long               bandWidthUp; 
-    unsigned long               lastAlertTimeStamp;
-    unsigned long               recoveryTimeStamp;
+    uint64_t                    lastAlertTimeStamp;
+    uint64_t                    recoveryTimeStamp;
     //unsigned long               expiratedTimeStamp;
+    pthread_mutex_t             mut_stop;
     int                         qosLevel;
     int                         qosLevelMax; 
     //bool                        flagEoS;    

@@ -29,6 +29,7 @@ public:
 
     void    setSocket( int socket, int socketType, string* connectToIP = NULL, string* connectToUDPPort = NULL);
     bool    sendData( const char* sendBuffer, sockaddr_in* pAddrInfo = NULL, bool showInfo = false );
+    bool    sendBWData( const char* sendBuffer, sockaddr_in* pAddrInfo = NULL);
     bool    receiveData( char* receiveBuffer, int receiveBufferSize, sockaddr_in* pAddrInfo, bool showInfo);
     bool    shutDown( );
 

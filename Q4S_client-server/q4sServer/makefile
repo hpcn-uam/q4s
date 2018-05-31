@@ -6,7 +6,16 @@ FILE_SERVER=Q4SServerConfigFile.cpp Q4SServer.cpp Q4SServerProtocol.cpp Q4SServe
 DEBUG_FLAGS= -DDEBUG
 OBJ=Q4SServer
 FLAGS= -pthread -Wall -ggdb3
+ifeq ($(SHOW_INFO), 1)  #at this point, the makefile checks if FEATURE is enabled
+SHOW1 = -DSHOW_INFO 
+endif
+ifeq ($(SHOW_INFO2), 1)  #at this point, the makefile checks if FEATURE is enabled
+SHOW2 = -DSHOW_INFO2 
+endif
+ifeq ($(SAVE_INFO), 1)  #at this point, the makefile checks if FEATURE is enabled
+SAVE = -DSAVE_INFO 
+endif
 all:
-	$(CC) $(HEADERS_COMMON) $(HEADERS_SERVER) $(FILE_COMMON) $(FILE_SERVER) $(DEBUG_FLAGS) $(FLAGS) -o $(OBJ)
+	$(CC) $(HEADERS_COMMON) $(HEADERS_SERVER) $(FILE_COMMON) $(FILE_SERVER) $(DEBUG_FLAGS) $(FLAGS) -o $(OBJ) $(SHOW1) $(SHOW2) $(SAVE)
 clean:
 	rm -rf $(OBJ) *~* 
