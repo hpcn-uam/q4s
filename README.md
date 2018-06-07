@@ -2,9 +2,7 @@
 
 ## Description
 
-This project provides an implementation of Quality for Service Protocol (Q4S, https://datatracker.ietf.org/doc/draft-aranda-dispatch-q4s/).
-
-This version is compatible with Linux and is based on the OptivaMedia's project(https://github.com/OptivaMediaArqueopterix/q4s).
+This project provides an implementation of [Quality for Service Protocol (Q4S)](https://datatracker.ietf.org/doc/draft-aranda-dispatch-q4s/ "Q4S @ IETF Datatracker"). This implementation has been developed at HPCN-UAM, in the context of the [Racing Drones project](http://www.hpcn-uam.es/project/racing-drones/ "Racing Drones @ HPCN-UAM"). Current version is compatible with Linux, and is based on the [OptivaMedia's project](https://github.com/OptivaMediaArqueopterix/q4s).
 
 ## Instructions
 
