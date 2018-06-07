@@ -13,10 +13,10 @@ Q4S follows a client-server architecture. We provide two different makefiles, on
 ### Build process
 
 #### Option 1: 
-You can go to the folder q4s/Q4S_client-server/q4sCLient/ or q4s/Q4S_client-server/q4sServer/ and execute make to build the client or server part, respectively.
+You can go to the folder ```q4s/Q4S_client-server/q4sCLient/``` or ```q4s/Q4S_client-server/q4sServer/``` and execute ```make``` to build the client or server part, respectively.
 
 #### Option 2:
-[Under construction] Use the script execute_client.sh or execute_server.sh and select the option.
+[Under construction] Use the script ```execute_client.sh``` or ```execute_server.sh``` and select the option.
 
 ### Execution
 
