@@ -56,7 +56,7 @@ bool Q4SServerSocket::sendTcpData( int connId, const char* sendBuffer )
     ok &= getTcpSocket( connId, pQ4SSocket );
     if( ok )
     {
-        ok &= pQ4SSocket->sendData( sendBuffer );
+        ok &= q4sTcpSocket->sendData( sendBuffer );
     }
 
     return ok;
@@ -70,7 +70,7 @@ bool Q4SServerSocket::receiveTcpData( int connId, char* receiveBuffer, int recei
     ok &= getTcpSocket( connId, pQ4SSocket );
     if( ok )
     {
-        ok &= pQ4SSocket->receiveData( receiveBuffer, receiveBufferSize, NULL, q4SServerConfigFile.showSocketReceivedInfo );
+        ok &= q4sTcpSocket->receiveData( receiveBuffer, receiveBufferSize, NULL, q4SServerConfigFile.showSocketReceivedInfo );
     }
 
     return ok;
@@ -109,6 +109,8 @@ bool Q4SServerSocket::waitForTcpConnection( int connectionId )
         connectionInfo->id = connectionId;
         //ZeroMemory( &( connectionInfo->peerTcpAddrInfo ), sizeof( connectionInfo->peerTcpAddrInfo ) );
         //ZeroMemory( &( connectionInfo->peerUdpAddrInfo ), sizeof( connectionInfo->peerUdpAddrInfo ) );
+        memset(&( connectionInfo->peerTcpAddrInfo ),0, sizeof( connectionInfo->peerTcpAddrInfo ));
+
         ok &= acceptClientConnection( connectionInfo );
     }
 
@@ -143,6 +145,7 @@ bool Q4SServerSocket::closeConnection( int socketType )
     else if( socketType == SOCK_STREAM )
     {
         listConnectionInfo.front( )->q4sTcpSocket.shutDown( );
+        q4sTcpSocket->shutDown( ); 
     }
     else
     {
@@ -252,14 +255,14 @@ bool Q4SServerSocket::initializeSockets()
 /*
 bool Q4SServerSocket::createAlertUdpSocket()
 {
-	int 	iResult; 
-	bool	ok=true;
-	mAlertSocket = socket(AF_INET, SOCK_DGRAM,0); // ESE 0 HAY QUE REVISARLO
-	if (mAlertSocket== 0)
-	{
-		printf("Error at socket");
-	}
-	return ok; 
+    int     iResult; 
+    bool    ok=true;
+    mAlertSocket = socket(AF_INET, SOCK_DGRAM,0); // ESE 0 HAY QUE REVISARLO
+    if (mAlertSocket== 0)
+    {
+        printf("Error at socket");
+    }
+    return ok; 
 }
 */
 bool Q4SServerSocket::createAlertUdpSocket( )
@@ -460,9 +463,11 @@ bool Q4SServerSocket::acceptClientConnection( Q4SConnectionInfo* connectionInfo 
     }
     else
     {
+
         connectionInfo->q4sTcpSocket.init( );
         connectionInfo->q4sTcpSocket.setSocket( attemptSocket, SOCK_STREAM );
         listConnectionInfo.push_back( connectionInfo );
+        q4sTcpSocket= &connectionInfo->q4sTcpSocket; 
     }
 
     return ok;

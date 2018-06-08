@@ -74,7 +74,8 @@ private:
     static void*                manageBWReceivedDataFn( void* lpData);
     void*                       sendUDPBW(unsigned long bandWidthUp);
     static void*                sendUDPBWFn(void* BWinfoFn );
-    Q4SMessageManager           mReceivedMessages;
+    Q4SMessageManager           mReceivedMessagesTCP;    
+    Q4SMessageManager           mReceivedMessagesUDP;
     unsigned long               bandWidthUp; 
     uint64_t                    lastAlertTimeStamp;
     uint64_t                    recoveryTimeStamp;

@@ -136,7 +136,7 @@ bool Q4SMessageManager::readPingMessage( int pingIndex, Q4SMessageInfo& messageI
     sem_wait( &mevMessageReady);
     token=token-1;
     pthread_mutex_lock (&mut_section);
-
+//printf("pingIndex: %d\n", pingIndex);
 
     for( itr_msg = mMessages.begin( ); ( found == false ) && ( itr_msg != mMessages.end( ) ); itr_msg++ )
     {
@@ -218,6 +218,19 @@ bool Q4SMessageManager::read200OKMessage( Q4SMessageInfo& messageInfo, bool eras
     return found;
 }
 
+bool Q4SMessageManager::eraseMessages()
+{    
+        bool    ok = true;
+        std::list< Q4SMessageInfo >::iterator  itr_msg;
+        sem_wait( &mevMessageReady);   
+        token= token -1; 
+        pthread_mutex_lock (&mut_section);
+        mMessages.pop_front();
+        pthread_mutex_unlock (&mut_section);
+
+        return ok; 
+}
+
 bool Q4SMessageManager::readBandWidthMessage(unsigned long &sequenceNumber, bool erase, uint64_t *timestampBW)
 {
     bool    found = false;
@@ -284,6 +297,9 @@ bool Q4SMessageManager::readCancelMessage()
 //printf("CANCEL ENCONTRADO\n");
         }
     }
+
+    
+
     
     pthread_mutex_unlock (&mut_section);
 

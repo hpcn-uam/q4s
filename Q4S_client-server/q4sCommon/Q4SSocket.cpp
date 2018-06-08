@@ -18,8 +18,6 @@ bool Q4SSocket::init( )
     done();
 
     bool ok = true;
-    timeout.tv_sec = 10;
-    timeout.tv_usec = 0;
     return ok;
 }
 
@@ -49,7 +47,6 @@ bool Q4SSocket::sendData( const char* sendBuffer, sockaddr_in* pAddrInfo, bool s
     //Bind the socket.
     int     iResult;
     bool    ok = true;
-
     // Send the buffer
     if( mSocketType == SOCK_STREAM )
     {
@@ -78,6 +75,7 @@ bool Q4SSocket::sendData( const char* sendBuffer, sockaddr_in* pAddrInfo, bool s
             addrInfoLenToUse = mPeerAddrInfoLen;
         }
         iResult = sendto( mSocket, sendBuffer, (int)strlen( sendBuffer ), 0, addrInfoToUse, addrInfoLenToUse );
+
     }
     else
     {
@@ -86,7 +84,7 @@ bool Q4SSocket::sendData( const char* sendBuffer, sockaddr_in* pAddrInfo, bool s
 
     if( iResult <= 0 )
     {
-        printf( "send failed with error" );
+        printf( "send failed with error\n" );
         disconnect( );
         ok &= false;
     }
@@ -123,7 +121,7 @@ bool Q4SSocket::sendBWData( const char* sendBuffer, sockaddr_in* pAddrInfo)
  
     if( iResult <= 0 )
     {
-        printf( "send failed with error" );
+        printf( "send failed with error\n" );
         disconnect( );
         ok &= false;
     }
@@ -155,23 +153,25 @@ bool Q4SSocket::receiveData( char* receiveBuffer, int receiveBufferSize, sockadd
     {
         mPeerAddrInfoLen = (socklen_t)sizeof( mPeerAddrInfo );
     }
+    char ipstr[200];
+    int port;
+
+
     iResult = recvfrom( mSocket, receiveBuffer, receiveBufferSize, 0, ( sockaddr* )&mPeerAddrInfo, &mPeerAddrInfoLen );
     if (iResult < 0)
     {
-        printf( "Error at socket()\n" );
+        printf( "Error at receiveData \n" );
         printf("Error code: %d\n", errno); 
     }
     if( mSocketType == SOCK_STREAM )
-    {    
+    {
         setsockopt(mSocket, IPPROTO_TCP, TCP_QUICKACK, (char *)&value, sizeof(int));
-
     } 
 
     if( pAddrInfo != NULL )
     {
         memcpy( pAddrInfo, &mPeerAddrInfo, sizeof( mPeerAddrInfo ) );
     }
-
 /*
     if ( showInfo) 
     {
@@ -212,7 +212,9 @@ bool Q4SSocket::shutDown( )
     // shutdown the connection since no more data will be sent
     if( mSocket > 0 )
     {
-        printf( "Shutting down socket...\n" );
+        #if SHOW_INFO
+            printf( "Shutting down socket...\n" );
+        #endif
         iResult = shutdown( mSocket, SHUT_WR);
         if( iResult < 0 )
         {

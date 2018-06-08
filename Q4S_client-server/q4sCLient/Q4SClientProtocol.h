@@ -25,6 +25,7 @@ public:
     void    recovery();
     bool    negotiation(Q4SSDPParams params, Q4SMeasurementResult &results);
     void    continuity(Q4SSDPParams params);
+    void    cancel();
 private:
 
 
@@ -34,7 +35,7 @@ private:
     void    closeConnections();
     bool    tryOpenConnectionsTimes(unsigned long times, unsigned long milisecondsBetweenTimes);
     void    bwidth();
-    void    cancel();
+
     bool    measureStage0(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &downResults,unsigned long pingsToSend);
     bool    measureContinuity(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &downResults, unsigned long pingsToSend);
     bool    sendRegularPings(std::vector<uint64_t> &arrSentPingTimestamps, unsigned long pingsToSend, unsigned long timeBetweenPings);
@@ -53,7 +54,8 @@ private:
     unsigned long  bandWidthDown; 
     
 	Q4SClientSocket             mClientSocket;    
-    Q4SMessageManager           mReceivedMessages;
+    Q4SMessageManager           mReceivedMessagesTCP;    
+    Q4SMessageManager           mReceivedMessagesUDP;
     Q4SMeasurementResult        mResults;
     pthread_t                   marrthrHandle[ 2 ]; 
     int                         qosLevel;

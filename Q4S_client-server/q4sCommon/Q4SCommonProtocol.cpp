@@ -19,7 +19,7 @@ void Q4SCommonProtocol::calculateLatency(Q4SMessageManager &mReceivedMessages, s
     int sequenceNumberPing; 
     uint64_t TimeStampPing; 
     // Prepare for Latency calculation
-    for( pingIndex = 0; pingIndex < pingMaxCount; pingIndex++ )
+    for( pingIndex = 0; pingIndex < pingMaxCount && mReceivedMessages.size()>0; pingIndex++ )
     {
         if( mReceivedMessages.read200OKMessage( messageInfo, true, &TimeStampPing, &sequenceNumberPing ) == true )
         {
@@ -62,29 +62,36 @@ void Q4SCommonProtocol::calculateJitter(
     int pingMaxCount = pingsSent;
     Q4SMessageInfo messageInfo;
     std::vector<uint64_t> arrReceivedPingTimestamps;
-    std::vector<unsigned long> arrPingJitters;
+    std::vector<unsigned long> arrPingJitters={};
+    bool firstPing = true; 
     uint64_t actualPingTimeWithPrevious;
     unsigned long packetLossCount = 0;
+    int indexReceived= 0; 
 
     // Prepare for Jitter calculation
-    for( pingIndex = 0; pingIndex < pingMaxCount; pingIndex++ )
+    for( pingIndex = 0; pingIndex < pingMaxCount && mReceivedMessages.size()>0; pingIndex++ )
     {
         if( mReceivedMessages.readPingMessage( pingIndex, messageInfo, true ) == true )
         {
-            arrReceivedPingTimestamps.push_back( messageInfo.timeStamp );
+            //printf("*********************************************************************\n");
+            //printf("index jitter: %d\n", pingIndex);
 
-            if( pingIndex > 0 )
+            arrReceivedPingTimestamps.push_back( messageInfo.timeStamp );
+            //printf("MENSAJE LEIDO%s\n", messageInfo.message.c_str());
+            //printf("%"PRIu64"\n",messageInfo.timeStamp  );
+            if( !firstPing)
             {
                 // Actual time between this ping and previous calculation
-                actualPingTimeWithPrevious = ( arrReceivedPingTimestamps[ pingIndex ] - arrReceivedPingTimestamps[ pingIndex - 1 ] );
-
+                actualPingTimeWithPrevious = ( arrReceivedPingTimestamps[ indexReceived ] - arrReceivedPingTimestamps[ indexReceived - 1 ] );
+                //printf("RESTA PINGS:%"PRIu64"-%"PRIu64"= %"PRIu64"\n",  arrReceivedPingTimestamps[ pingIndex ],arrReceivedPingTimestamps[ indexReceived - 1 ],actualPingTimeWithPrevious); 
                 // Actual time between this ping and previous store
-                arrPingJitters.push_back( (uint64_t)abs((double)actualPingTimeWithPrevious - (double)timeBetweenPings) );
-
+                arrPingJitters.push_back( (unsigned long)abs((double)actualPingTimeWithPrevious - (double)timeBetweenPings) );
                 #if SHOW_INFO2
                     printf( "PING %d ET: %.3f\n", pingIndex, actualPingTimeWithPrevious );
                 #endif
             }
+            firstPing= false; 
+            indexReceived++; 
         }
         else
         {
@@ -93,17 +100,21 @@ void Q4SCommonProtocol::calculateJitter(
                 packetLossCount++;
             }
 
-            unsigned long jitterOfPacketLoss = 2 * timeBetweenPings;
-            arrPingJitters.push_back(jitterOfPacketLoss);
+            //unsigned long jitterOfPacketLoss = 2 * timeBetweenPings;
+            //arrPingJitters.push_back(jitterOfPacketLoss);
+            if (!firstPing)
+            {
+                uint64_t timeOfPacketLoss = arrReceivedPingTimestamps[ indexReceived - 1 ] + timeBetweenPings;
+                arrReceivedPingTimestamps.push_back(timeOfPacketLoss);
+                indexReceived++; 
 
-            uint64_t timeOfPacketLoss = arrReceivedPingTimestamps[ pingIndex - 1 ] + timeBetweenPings;
-            arrReceivedPingTimestamps.push_back(timeOfPacketLoss);
+            }
             #if SHOW_INFO2
                 printf( "PING %d message lost\n", pingIndex);
             #endif
         }
     }
-
+    //printf("%d\n", arrPingJitters.size());
     // Jitter calculation
     jitter = EMathUtils_mean( arrPingJitters );
 
@@ -144,10 +155,10 @@ std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMes
     std::set<unsigned long> recivedSequenceNumberList;
     uint64_t timeStamp; 
     unsigned long messageSequenceNumber;
-
-    while (mReceivedMessages.readBandWidthMessage(messageSequenceNumber, true, &timeStamp) )
+    bool flag=true; 
+    while (mReceivedMessages.readBandWidthMessage(messageSequenceNumber, true, &timeStamp) && flag)
     {
-        
+        flag= mReceivedMessages.size()!=1; 
         TimeStamplist.insert(timeStamp);
         //printf("%lu, %lu\n", timeStamp, messageSequenceNumber);
         recivedSequenceNumberList.insert(messageSequenceNumber);

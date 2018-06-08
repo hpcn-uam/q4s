@@ -64,7 +64,9 @@ private:
 
     bool   createAlertUdpSocket();
 
- 
+    sockaddr_in     peerTcpAddrInfo;
+    Q4SSocket       *q4sTcpSocket;
+
     int                 mListenSocket;
     struct addrinfo*    mpAddrInfoResultTcp; 
     std::list<Q4SConnectionInfo*>   listConnectionInfo;
@@ -72,6 +74,7 @@ private:
     int                 mUdpSocket;
     struct addrinfo*    mpAddrInfoResultUdp; 
     Q4SSocket           mq4sUdpSocket;
+    sockaddr_in         peerUdpAddrInfo;
 
 	int 				mAlertSocket;
     struct addrinfo*    mpAddrInfoResultAlert; 

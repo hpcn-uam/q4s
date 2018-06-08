@@ -74,6 +74,7 @@ float EMathUtils_mean( std::vector < unsigned long > &vector)
 
     std::for_each(vector.begin(), vector.end(), [&](float element) {
         total += element;
+        //printf("ELEMENTO: %f\n", element);
     });
 
     mean = total/(float)vector.size();

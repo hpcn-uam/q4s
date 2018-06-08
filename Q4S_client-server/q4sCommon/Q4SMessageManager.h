@@ -29,6 +29,7 @@ class Q4SMessageManager
     bool readBandWidthMessage(unsigned long &sequenceNumber, bool erase, uint64_t *timestampBW);
     bool readmMessages();
     int size() const;
+    bool eraseMessages();
 
 private:
     

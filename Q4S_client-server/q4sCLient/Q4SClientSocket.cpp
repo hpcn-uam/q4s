@@ -65,7 +65,9 @@ bool Q4SClientSocket::closeConnection( int socketType )
 
     if( socketType == SOCK_STREAM )
     {
-        printf("closing socket SOCK_STREAM\n");
+        #if SHOW_INFO
+            printf("closing socket SOCK_STREAM\n");
+        #endif
         ok &= mq4sTcpSocket.shutDown( );
     }
     else if( socketType == SOCK_DGRAM )
@@ -185,9 +187,11 @@ bool Q4SClientSocket::connectToServer( Q4SSocket* q4sSocket, int socketType )
                 socketAttempt = -1;
             }
             if( hints.ai_socktype == SOCK_STREAM )
-            {    
-                
+            {                    
                 setsockopt(socketAttempt, IPPROTO_TCP, TCP_QUICKACK, (char *)&value, sizeof(int));
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
+                socketTCP = socketAttempt;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////7
 
             } 
             if( hints.ai_socktype == SOCK_DGRAM )

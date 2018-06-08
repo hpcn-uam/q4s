@@ -89,15 +89,14 @@ bool Q4SServerStateManager::stateInit (Q4SServerState state)
                 {
                     nextState = Q4SSERVERSTATE_NEGOTIATION;                    
                     #if SHOW_INFO
-
-                    printf("Hemos llegado a la negociacion\n");
+                        printf("Hemos llegado a la negociacion\n");
                     #endif
                 }   
                 else
                 {
                     nextState = Q4SSERVERSTATE_TERMINATION;
                     #if SHOW_INFO
-                    printf("Hemosllegado a la terminacion 2\n");
+                        printf("Hemosllegado a la terminacion 2\n");
                     #endif
                 }
                 
@@ -147,9 +146,15 @@ bool Q4SServerStateManager::stateInit (Q4SServerState state)
                 std::string alertMessage;
                 alertMessage= "Termination";
                 Q4SServerProtocol::alert(alertMessage);
+                #if SHOW_INFO
+                    printf("TERMINATION\n");
+                #endif
                 //Q4SServerProtocol::end();
-                Q4SServerProtocol::done();
-                stop = true;
+                Q4SServerProtocol::done();                
+                nextState = Q4SSERVERSTATE_HANDSHAKE;
+                ok= true; 
+
+                //stop = true;
 
             }
         break;

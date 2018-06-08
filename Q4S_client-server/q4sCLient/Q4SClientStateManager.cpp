@@ -12,13 +12,13 @@ Q4SClientStateManager::Q4SClientStateManager()
 
 Q4SClientStateManager::~Q4SClientStateManager()
 {
-    done();
+    //done();
 }
 
 bool Q4SClientStateManager::init()
 {
     // Prevention done call
-    done();
+    //done();
     
     bool ok = true;
 
@@ -30,6 +30,7 @@ bool Q4SClientStateManager::init()
 
 void Q4SClientStateManager::done()
 {
+    Q4SClientProtocol::cancel(); 
     Q4SClientProtocol::done(); 
 }
 
@@ -160,7 +161,9 @@ bool Q4SClientStateManager::stateInit (Q4SClientState state)
 
         case Q4SCLIENTSTATE_TERMINATION:
             {
-                printf("Termination state\n");
+                #if SHOW_INFO
+                    printf("Termination state\n");
+                #endif
                 Q4SClientProtocol::done( );
                 stop = true;
             }

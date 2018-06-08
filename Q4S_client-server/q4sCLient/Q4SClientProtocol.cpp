@@ -32,7 +32,9 @@ bool Q4SClientProtocol::init(unsigned long times, unsigned long milisecondsBetwe
     #endif
     if (ok)
     {
-        ok &= mReceivedMessages.init( );
+        ok &= mReceivedMessagesUDP.init( );
+        ok &= mReceivedMessagesTCP.init( );
+
     }
 
     if (ok)
@@ -67,8 +69,9 @@ bool Q4SClientProtocol::tryOpenConnectionsTimes(unsigned long times, unsigned lo
 }
 
 void Q4SClientProtocol::done()
-{    
-    mReceivedMessages.done( );
+{        
+    mReceivedMessagesTCP.done( );
+    mReceivedMessagesUDP.done( );
     closeConnections();
     
 }
@@ -132,6 +135,11 @@ bool Q4SClientProtocol::ready(unsigned long stage,Q4SSDPParams &params)
 
         Q4SMessage message;
         message.initRequest(Q4SMTYPE_READY, "myIP", q4SClientConfigFile.defaultTCPPort, false, 0, false, 0, true, stage);
+        while(mReceivedMessagesUDP.size()>0)
+        {
+            //printf("BORRANDO MENSAJES\n");
+            mReceivedMessagesUDP.eraseMessages();
+        }
         ok &= mClientSocket.sendTcpData( message.getMessageCChar() );
     }
     /*
@@ -150,13 +158,13 @@ bool Q4SClientProtocol::ready(unsigned long stage,Q4SSDPParams &params)
     if ( ok )
     {
         std::string message;
-        mReceivedMessages.readFirst( message );
+        mReceivedMessagesTCP.readFirst( message );
         //printf("%s\n", message.c_str());
        
         ok &= Q4SMessageTools_is200OKMessage(message, false, 0, 0); 
         while (!ok)
         {
-            mReceivedMessages.readFirst( message );
+            mReceivedMessagesTCP.readFirst( message );
             ok = Q4SMessageTools_is200OKMessage(message,false, 0, 0);
         }
         ok &= Q4SSDP_parse(message, params);
@@ -175,6 +183,7 @@ bool Q4SClientProtocol::handshake(Q4SSDPParams &params)
     
     if( ok )
     {
+        //sleep(5);
         Q4SMessage message;
         message.initRequest(Q4SMTYPE_BEGIN, "myIP", q4SClientConfigFile.defaultTCPPort);
         ok &= mClientSocket.sendTcpData( message.getMessageCChar() );
@@ -184,12 +193,12 @@ bool Q4SClientProtocol::handshake(Q4SSDPParams &params)
     {
         std::string message;
 
-        mReceivedMessages.readFirst( message );            
+        mReceivedMessagesTCP.readFirst( message );            
         ok = Q4SMessageTools_is200OKMessage(message,false, 0, 0);
 
         while (!ok)
         {
-            mReceivedMessages.readFirst( message );
+            mReceivedMessagesTCP.readFirst( message );
             ok = Q4SMessageTools_is200OKMessage(message,false, 0, 0);
         }
         ok &= Q4SSDP_parse(message, params);
@@ -230,20 +239,19 @@ bool Q4SClientProtocol::negotiation(Q4SSDPParams params, Q4SMeasurementResult &r
             mResults = results;
         }
      #if SAVE_INFO
-        
+        struct timeval time_s;
         std::ofstream pFile("../../test/measured/measure_client.txt", ios::out | ios::app);; 
-        //pFile = fopen ("measure_client.txt","w");
-        sprintf(data2save, "0\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%d\n",results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.bandwidth, downResults.values.bandwidth,results.values.packetLoss, downResults.values.packetLoss,QOS_negotiation, measureOk); 
+        int time_error = gettimeofday(&time_s, NULL); 
+        uint64_t actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
+        sprintf(data2save, "0\t%"PRIu64"\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%d\n",actualTime,results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.bandwidth, downResults.values.bandwidth,results.values.packetLoss, downResults.values.packetLoss,QOS_negotiation, measureOk); 
         pFile<<data2save;
-        //fclose(pFile); 
     #endif
     }    
-     
+    //printf("SALIENDO DE NEGOTIATION: %d\n", measureOk);
     qosLevel= params.qosLevelUp;
     qosLevelMax= qosLevel; 
     if (!measureOk)
     {
-        cancel(); 
         ok = false;  
     }
     return ok;
@@ -293,7 +301,6 @@ void Q4SClientProtocol::continuity(Q4SSDPParams params)
             {
                 //printf("QOS: %d\n", qosLevel);
                 stop= true; 
-                cancel();
             }
             if (!stop)
             {
@@ -307,10 +314,12 @@ void Q4SClientProtocol::continuity(Q4SSDPParams params)
             recovery(); 
         }
     #if SAVE_INFO
-        
+        struct timeval time_s;
         std::ofstream pFile("../../test/measured/measure_client.txt", ios::out | ios::app);; 
-        //pFile = fopen ("measure_client.txt","w");
-        sprintf(data2save, "1\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%d\n",results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.bandwidth, downResults.values.bandwidth,results.values.packetLoss, downResults.values.packetLoss,qosLevel, measureOk); 
+        //pFile = fopen ("measure_client.txt","w");        
+        int time_error = gettimeofday(&time_s, NULL); 
+        uint64_t actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
+        sprintf(data2save, "1\t%"PRIu64"\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%d\n",actualTime,results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.bandwidth, downResults.values.bandwidth,results.values.packetLoss, downResults.values.packetLoss,qosLevel, measureOk); 
         pFile<<data2save;
         //fclose(pFile); 
     #endif
@@ -391,7 +400,7 @@ bool Q4SClientProtocol::measureStage0(Q4SSDPParams params, Q4SMeasurementResult 
 
         // Calculate Latency
         calculateLatency(
-            mReceivedMessages, 
+            mReceivedMessagesUDP, 
             arrSentPingTimestamps, 
             results.values.latency, 
             pingsToSend, 
@@ -402,7 +411,7 @@ bool Q4SClientProtocol::measureStage0(Q4SSDPParams params, Q4SMeasurementResult 
         // Calculate Jitter
         float packetLoss = 0.f;
         calculateJitterStage0(
-            mReceivedMessages, 
+            mReceivedMessagesUDP, 
             results.values.jitter,
             params.procedure.negotiationTimeBetweenPingsUplink, 
             pingsToSend,
@@ -458,7 +467,7 @@ bool Q4SClientProtocol::interchangeMeasurementProcedure(Q4SMeasurementValues &do
         while(!ok)
         {
 
-            ok = mReceivedMessages.readPingMessage( 0, messageInfo, true );
+            ok = mReceivedMessagesTCP.readPingMessage( 0, messageInfo, true );
             if (ok)
             {
                 ok &= Q4SMeasurementValues_parse(messageInfo.message, downMeasurements);
@@ -486,19 +495,19 @@ bool Q4SClientProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
         // Send regular pings
         ok &= sendRegularPings(arrSentPingTimestamps, pingsToSend, params.procedure.continuityTimeBetweenPingsUplink);
     }
-    
-    if(!ok)
-    {
-        printf( "ERROR:sendUdpData PING.\n" );
-    }
-
+    #if SHOW_INFO
+        if(!ok)
+        {
+            printf( "ERROR:sendUdpData PING.\n" );
+        }
+    #endif
     if (ok)
     {
         usleep(params.procedure.negotiationTimeBetweenPingsUplink *1000);
 
         // Calculate Latency
         calculateLatency(
-            mReceivedMessages, 
+            mReceivedMessagesUDP, 
             arrSentPingTimestamps, 
             results.values.latency, 
             pingsToSend, 
@@ -508,7 +517,7 @@ bool Q4SClientProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
         #endif
         // Calculate Jitter
         calculateJitterAndPacketLossContinuity(
-            mReceivedMessages, 
+            mReceivedMessagesUDP, 
             results.values.jitter, 
             params.procedure.continuityTimeBetweenPingsUplink, 
             pingsToSend,
@@ -627,24 +636,25 @@ diffTime= (time_t_aux.tv_sec - time_s.tv_sec)*1e6 + (time_t_aux.tv_usec - time_s
     if (ok)
     {
         // Calculate PacketLoss
-        bool okCalculated = calculateBandwidthPacketLossStage1(mReceivedMessages, results.values.packetLoss, params.procedure.bandwidthTime, results.values.bandwidth);
-        if (!okCalculated)
-        {
-            printf( "PacketLoss Calculation Error");
-        }        
+        bool okCalculated = calculateBandwidthPacketLossStage1(mReceivedMessagesUDP, results.values.packetLoss, params.procedure.bandwidthTime, results.values.bandwidth);
         #if SHOW_INFO
+            if (!okCalculated)
+            {
+                printf( "PacketLoss Calculation Error");
+            }        
+            
 
             printf( "MEASURING RESULT - BandWidth Up: %.3f kb/s\n", results.values.bandwidth );
 
             printf( "MEASURING RESULT - PacketLoss Up: %.3f %\n", results.values.packetLoss );
         #endif
     }
-
-    if(!ok)
-    {
-        printf( "ERROR:sendUdpData BWidth.\n" );
-    }
-
+    #if SHOW_INFO
+        if(!ok)
+        {
+            printf( "ERROR:sendUdpData BWidth.\n" );
+        }
+    #endif
     if (ok)
     {
         ok &= interchangeMeasurementProcedure(downMeasurements, results);
@@ -735,7 +745,7 @@ void* Q4SClientProtocol::manageUdpReceivedData( )
                 #endif
             }
             //printf("ACTUAL TIMESTAMP: %lu\n MESSAGE:%s\n***********************************************\n", actualTimeStamp, message.c_str());
-            mReceivedMessages.addMessage(message, actualTimeStamp);
+            mReceivedMessagesUDP.addMessage(message, actualTimeStamp);
 
         }
 
@@ -790,7 +800,7 @@ void* Q4SClientProtocol::manageBWReceivedData( )
             
 //gettimeofday(&time_s, NULL); 
 
-            mReceivedMessages.addMessage(message, actualTimeStamp);
+            mReceivedMessagesUDP.addMessage(message, actualTimeStamp);
 
 //gettimeofday(&time_s2, NULL); 
 //printf("Cost addMessage: %lus%luus\nTotal:%lus%luus\n********************************\n",(time_s2.tv_sec-time_s.tv_sec),(time_s2.tv_usec-time_s.tv_usec),(time_s2.tv_sec-time_s0.tv_sec),(time_s2.tv_usec-time_s0.tv_usec));
@@ -817,8 +827,9 @@ void* Q4SClientProtocol::manageTcpReceivedData( )
         ok &= mClientSocket.receiveTcpData( buffer, sizeof( buffer ) );
         if( ok )
         {
+            //printf("%s\n", &buffer);
             std::string message = buffer;
-            mReceivedMessages.addMessage ( message );
+            mReceivedMessagesTCP.addMessage ( message );
         }
     }
 

@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
+
 class Q4SClientSocket
 {
 public:
@@ -20,6 +21,7 @@ public:
     bool    sendUdpData( const char* sendBuffer );
     bool    receiveUdpData( char* receiveBuffer, int receiveBufferSize );
     bool    sendUdpBWData( const char* sendBuffer );
+    int     socketTCP;
 
 private:
 

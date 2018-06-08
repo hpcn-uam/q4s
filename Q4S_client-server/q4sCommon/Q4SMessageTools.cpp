@@ -229,15 +229,11 @@ bool Q4SMessageTools_isCancel(std::string message)
 
     // Convert message to a stringstream 
   
-        std::getline(messageStream, extracted, ' ');
+        std::getline(messageStream, extracted, '\n');
         // Check if method is Cancel
         if ( strcmp(extracted.c_str(), "CANCEL\r") == 0)
         {
-            #if SHOW_INFO
-                printf("MENSAJE EXTRAIDO CANCEL: %s\n", extracted.c_str());
 
-                printf("MENSAJE CANCEL: %s\n", message.c_str());
-            #endif
             ok = true;
         }
     
