@@ -5,7 +5,7 @@ FILE_COMMON= ../q4sCommon/ConfigFile.cpp ../q4sCommon/Q4SCommonProtocol.cpp ../q
 FILE_SERVER=Q4SServerConfigFile.cpp Q4SServer.cpp Q4SServerProtocol.cpp Q4SServerSocket.cpp Q4SServerStateManager.cpp
 DEBUG_FLAGS= -DDEBUG
 OBJ=Q4SServer
-FLAGS= -pthread -Wall -ggdb3
+FLAGS= -pthread -Wall -ggdb3 -std=c++11
 ifeq ($(SHOW_INFO), 1)  #at this point, the makefile checks if FEATURE is enabled
 SHOW1 = -DSHOW_INFO 
 endif
