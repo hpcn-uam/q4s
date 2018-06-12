@@ -259,7 +259,8 @@ bool Q4SClientProtocol::negotiation(Q4SSDPParams params, Q4SMeasurementResult &r
 
 void Q4SClientProtocol::continuity(Q4SSDPParams params)
 {
-    //printf("----------Continuity Phase\n");
+
+//printf("----------Continuity Phase\n");
 
     bool stop = false;
     bool measureOk = true;
@@ -450,7 +451,6 @@ bool Q4SClientProtocol::measureStage0(Q4SSDPParams params, Q4SMeasurementResult 
 bool Q4SClientProtocol::interchangeMeasurementProcedure(Q4SMeasurementValues &downMeasurements, Q4SMeasurementResult results)
 {
     bool ok = true;
-
     if ( ok ) 
     {
         // Send Info Ping with sequenceNumber 0
@@ -462,7 +462,7 @@ bool Q4SClientProtocol::interchangeMeasurementProcedure(Q4SMeasurementValues &do
     if (ok)
     {
         // Wait to recive the measurements Ping
-        Q4SMessageInfo  messageInfo;
+        Q4SMessageInfo  messageInfo={};
         ok= false; 
         while(!ok)
         {
@@ -489,7 +489,6 @@ bool Q4SClientProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
 
     std::vector<uint64_t> arrSentPingTimestamps;
     Q4SMeasurementValues downMeasurements;
-
     if (ok)
     {
         // Send regular pings
@@ -696,7 +695,7 @@ void* Q4SClientProtocol::manageUdpReceivedDataFn( void* lpData )
 void* Q4SClientProtocol::manageUdpReceivedData( )
 {
     bool            ok = true;
-    char            udpBuffer[ 2048 ];
+    char            udpBuffer[ 2048 ]={};
     int             time_error;
     int             pingNumber; 
     uint64_t        actualTimeStamp;
@@ -821,9 +820,11 @@ void* Q4SClientProtocol::manageTcpReceivedData( )
 {
     bool                ok = true;
     char                buffer[ 65536 ];
-    
+    memset(buffer, 0, sizeof(buffer));
+
     while (ok) 
-    {
+    {    
+        memset(buffer, 0, sizeof(buffer));
         ok &= mClientSocket.receiveTcpData( buffer, sizeof( buffer ) );
         if( ok )
         {

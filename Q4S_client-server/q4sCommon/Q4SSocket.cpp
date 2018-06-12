@@ -198,7 +198,9 @@ bool Q4SSocket::receiveData( char* receiveBuffer, int receiveBufferSize, sockadd
     }
     else 
     {
+        #if SHOW_INFO
         printf( "Connection closed\n" );
+        #endif
         ok &= false;
     }
     return ok;

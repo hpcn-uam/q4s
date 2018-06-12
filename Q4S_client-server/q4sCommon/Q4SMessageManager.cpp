@@ -63,13 +63,14 @@ bool Q4SMessageManager::readFirst( std::string &firstMessage )
     bool    ok = true;
     
 
-    sem_wait( &mevMessageReady);
-    token=token-1;
+    //sem_wait( &mevMessageReady);
+    
+    //token=token-1;
     pthread_mutex_lock (&mut_section);
     
     if( mMessages.size( ) == 0 )
     {
-        printf( "FATAL ERROR. Message available but stolen by another thread.\n" );
+        //printf( "FATAL ERROR. Message available but stolen by another thread.\n" );
         ok = false;
     }
     else
@@ -133,8 +134,8 @@ bool Q4SMessageManager::readPingMessage( int pingIndex, Q4SMessageInfo& messageI
 {
     bool    found = false;
     std::list< Q4SMessageInfo >::iterator  itr_msg;
-    sem_wait( &mevMessageReady);
-    token=token-1;
+    //sem_wait( &mevMessageReady);
+    //token=token-1;
     pthread_mutex_lock (&mut_section);
 //printf("pingIndex: %d\n", pingIndex);
 
@@ -166,8 +167,8 @@ bool Q4SMessageManager::readPingMessage( int pingIndex, Q4SMessageInfo& messageI
     
     if(!found || !erase) 
     {
-        token++;
-        sem_post( &mevMessageReady);
+        //token++;
+        //sem_post( &mevMessageReady);
     }
 
     pthread_mutex_unlock (&mut_section);
@@ -284,15 +285,18 @@ bool Q4SMessageManager::readCancelMessage()
 {
     bool    found = false;
     std::list< Q4SMessageInfo >::iterator  itr_msg;
-    
+//printf("readCancelMessage 1\n"); 
+  
     pthread_mutex_lock (&mut_section);
-
+//printf("readCancelMessage 2\n"); 
 
     for( itr_msg = mMessages.begin( ); ( found == false ) && ( itr_msg != mMessages.end( ) ); itr_msg++ )
     {
+//printf(" MENSAJE CANCEL: %s\n", itr_msg->message.c_str());
        if (Q4SMessageTools_isCancel(itr_msg->message))
         {
             // Message found.
+//printf(" MENSAJE CANCEL: %s\n", itr_msg->message.c_str());
             found = true;
 //printf("CANCEL ENCONTRADO\n");
         }
