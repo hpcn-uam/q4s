@@ -81,22 +81,22 @@ std::string makeRecoveryPauseLine(unsigned long recoveryPause)
     return line;
 }
 
-std::string makeLatencyLine(unsigned long latency)
+std::string makeLatencyLine(float latency)
 {
     std::string line;
     line.append(APPLATENCY_PATTERN);
-    line.append(std::to_string(( unsigned long long int)latency));
+    line.append(std::to_string(( float)latency));
     line.append("\n");
     return line;
 }
 
-std::string makeJitterLine(unsigned long jitterUp, unsigned long jitterDown)
+std::string makeJitterLine(float jitterUp, float jitterDown)
 {
     std::string line;
     line.append(APPJITTER_PATTERN);
-    line.append(std::to_string(( unsigned long long int)jitterUp));
+    line.append(std::to_string((float)jitterUp));
     line.append("/");
-    line.append(std::to_string(( unsigned long long int)jitterDown));
+    line.append(std::to_string((float)jitterDown));
     line.append("\n");
     return line;
 }
@@ -285,7 +285,7 @@ bool Q4SSDP_parseRecoveryPause(std::string message, unsigned long& recoveryPause
     return ok;
 }
 
-bool Q4SSDP_parseLatency(std::string message, unsigned long& latency)
+bool Q4SSDP_parseLatency(std::string message, float& latency)
 {
     bool ok = true;
 
@@ -296,13 +296,13 @@ bool Q4SSDP_parseLatency(std::string message, unsigned long& latency)
 
     if (ok)
     {
-        latency = std::stol(paramText);
+        latency = std::stof(paramText);
     }
     
     return ok;
 }
 
-bool Q4SSDP_parseJitter(std::string message, unsigned long& up, unsigned long& down)
+bool Q4SSDP_parseJitter(std::string message, float& up, float& down)
 {
     bool ok = true;
 
@@ -314,8 +314,8 @@ bool Q4SSDP_parseJitter(std::string message, unsigned long& up, unsigned long& d
 
     if (ok)
     {
-        up = std::stol(firstParamText);
-        down = std::stol(secondParamText);
+        up = std::stof(firstParamText);
+        down = std::stof(secondParamText);
     }
 
     return ok;

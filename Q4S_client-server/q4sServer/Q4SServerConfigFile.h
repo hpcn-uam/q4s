@@ -16,9 +16,9 @@ public:
     bool isReactive;
     unsigned long alertPause;
     unsigned long recoveryPause;
-    unsigned long latency;
-    unsigned long jitterUp;
-    unsigned long jitterDown;
+    float latency;
+    float jitterUp;
+    float jitterDown;
     unsigned long bandwidthUp[11];
     unsigned long bandwidthDown[11];
     float packetLossUp;

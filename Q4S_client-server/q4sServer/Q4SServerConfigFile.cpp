@@ -13,9 +13,9 @@ Q4SServerConfigFile::Q4SServerConfigFile(const std::string &fName)
     isReactive = configFile.keyExists("IS_REACTIVE");
     alertPause = configFile.getValueOfKey<unsigned long>("ALERT_PAUSE", 2000);
     recoveryPause = configFile.getValueOfKey<unsigned long>("RECOVERY_PAUSE", 4000);
-    latency = configFile.getValueOfKey<unsigned long>("LATENCY", 3);
-    jitterUp = configFile.getValueOfKey<unsigned long>("JITTER_UP", 200);
-    jitterDown = configFile.getValueOfKey<unsigned long>("JITTER_DOWN", 200);
+    latency = configFile.getValueOfKey<float>("LATENCY", 3);
+    jitterUp = configFile.getValueOfKey<float>("JITTER_UP", 200);
+    jitterDown = configFile.getValueOfKey<float>("JITTER_DOWN", 200);
     bandwidthUp[0] = configFile.getValueOfKey<unsigned long>("BANDWIDTH_UP_0", 1000);
     bandwidthDown[0] = configFile.getValueOfKey<unsigned long>("BANDWIDTH_DOWN_0", 1000);    
     bandwidthUp[1] = configFile.getValueOfKey<unsigned long>("BANDWIDTH_UP_1", 900);

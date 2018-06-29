@@ -38,9 +38,9 @@ struct Q4SSDPParams
     Q4SSDPAlertingMode q4SSDPAlertingMode; 
     unsigned long alertPause;
     unsigned long recoveryPause;
-    unsigned long latency;
-    unsigned long jitterUp;
-    unsigned long jitterDown;
+    float latency;
+    float jitterUp;
+    float jitterDown;
     unsigned long bandWidthUp;
     unsigned long bandWidthDown;
     float packetLossUp;

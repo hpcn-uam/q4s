@@ -35,8 +35,8 @@ class Q4SCommonProtocol
 												float &packetLoss, 
 												bool showMeasureInfo=true);
         bool    calculateBandwidthPacketLossStage1(Q4SMessageManager &mReceivedMessages, float &packetLoss, uint64_t bandwidthTime, float &bandwidth);
-        bool    checkStage0(unsigned long maxLatencyUp, unsigned long maxJitterUp, 
-			unsigned long maxLatencyDown, unsigned long maxJitterDown, 
+        bool    checkStage0(float maxLatencyUp, float maxJitterUp, 
+			float maxLatencyDown, float maxJitterDown, 
 			Q4SMeasurementResult &upResults, 
 			Q4SMeasurementResult &downResults);
 		bool	checkStage1(
@@ -45,8 +45,8 @@ class Q4SCommonProtocol
 			Q4SMeasurementResult &upResults, 
 			Q4SMeasurementResult &downResults);
 		bool	checkContinuity(
-			unsigned long maxLatencyUp, unsigned long maxJitterUp, float maxPacketLossUp, 
-			unsigned long maxLatencyDown, unsigned long maxJitterDown, float maxPacketLossDown, 
+			float maxLatencyUp, float maxJitterUp, float maxPacketLossUp, 
+			float maxLatencyDown, float maxJitterDown, float maxPacketLossDown, 
 			Q4SMeasurementResult &upResults, Q4SMeasurementResult &downResults);
 		void showCheckMessage(Q4SMeasurementResult &upResults, Q4SMeasurementResult &downResults);
 		std::string generateAlertMessage(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &upResults);
@@ -54,9 +54,9 @@ class Q4SCommonProtocol
 		
 	private:
 
-        bool    checkStage0(unsigned long maxLatency, unsigned long maxJitter, Q4SMeasurementResult &results);
+        bool    checkStage0(float maxLatency, float maxJitter, Q4SMeasurementResult &results);
 		bool	checkStage1(unsigned long bandwidth, float packetLoss, Q4SMeasurementResult &results);
-		bool	checkContinuity(unsigned long maxLatency, unsigned long maxJitter, float maxPacketLoss, Q4SMeasurementResult &results);
+		bool	checkContinuity(float maxLatency, float maxJitter, float maxPacketLoss, Q4SMeasurementResult &results);
         void    calculateJitter(
 								Q4SMessageManager &mReceivedMessages, 
 								float &jitter, 

@@ -132,9 +132,7 @@ bool Q4SServerStateManager::stateInit (Q4SServerState state)
                 }
 
                 std::string alertMessage;
-                alertMessage= "Continuity end";
-                Q4SServerProtocol::alert(alertMessage);
-
+                
 
                 nextState = Q4SSERVERSTATE_TERMINATION;
             }

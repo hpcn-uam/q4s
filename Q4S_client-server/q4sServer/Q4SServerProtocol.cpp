@@ -330,20 +330,24 @@ void Q4SServerProtocol::continuity(Q4SSDPParams params)
         pthread_mutex_unlock (&mut_flag);
         */
         //printf("MEASURING\n");
-        stop1 = mReceivedMessagesTCP.readCancelMessage();
+        
 
         measureOk = Q4SServerProtocol::measureContinuity(params, results, upResults, 20);
-        if (!measureOk)
+        stop1 = mReceivedMessagesTCP.readCancelMessage();
+        if (!stop1)
         {
-            //Alert
-            alertMessage = generateNotificationAlertMessage(params, upResults, results);
-            alert(alertMessage);
-        }
-        else
-        {
-           // Recovery
-           alertMessage = generateNotificationAlertMessage(params, upResults, results);
-           recovery(alertMessage);
+            if (!measureOk)
+            {
+                //Alert
+                alertMessage = generateNotificationAlertMessage(params, upResults, results);
+                alert(alertMessage);
+            }
+            else
+            {
+               // Recovery
+               alertMessage = generateNotificationAlertMessage(params, upResults, results);
+               recovery(alertMessage);
+            }
         }
      #if SAVE_INFO
         struct timeval time_s;
@@ -421,7 +425,7 @@ void Q4SServerProtocol::alert(std::string alertMessage)
     uint64_t actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
     uint64_t timeFromLastAlert = actualTime - lastAlertTimeStamp;
 
-    if ( timeFromLastAlert > q4SServerConfigFile.alertPause)
+    if ( timeFromLastAlert > q4SServerConfigFile.alertPause | alertMessage=="Termination")
     {
         qosLevel++;
         lastAlertTimeStamp = actualTime;
@@ -731,6 +735,7 @@ bool Q4SServerProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
     {
         // Check
         upResults.values = upMeasurements;
+        upResults.values.jitter=1.11; 
         ok &= Q4SCommonProtocol::checkContinuity(
             params.latency, params.jitterUp, params.packetLossUp,
             params.latency, params.jitterDown, params.packetLossDown,
@@ -744,7 +749,7 @@ bool Q4SServerProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
     return ok;
 }
 
-bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult upResults)
+bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult &results, Q4SMeasurementResult &upResults)
 {
     bool ok = true;
     Q4SMeasurementValues upMeasurements;
@@ -790,7 +795,7 @@ bool Q4SServerProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
     {
         ok &= interchangeMeasurementProcedure(upMeasurements, results);
         #if SHOW_INFO
-            printf( "MEASURING RESULT - Bandwidth Up: %.3f kb/s\n", upMeasurements.bandwidth);
+            printf( "MEASURING RESULT - Bandwidth Ups: %.3f kb/s\n", upMeasurements.bandwidth);
             printf( "MEASURING RESULT - PacketLoss Up: %.3f %\n", upMeasurements.packetLoss );
         #endif
     }

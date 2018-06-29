@@ -237,24 +237,24 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
     return ok;
 }
 
-bool Q4SCommonProtocol::checkStage0(unsigned long maxLatency, unsigned long maxJitter, Q4SMeasurementResult &results)
+bool Q4SCommonProtocol::checkStage0(float maxLatency, float maxJitter, Q4SMeasurementResult &results)
 {
     bool ok = true;
 
-    if ( results.values.latency > (float)maxLatency )
+    if ( results.values.latency > maxLatency )
     {
         results.latencyAlert = true;
         #if SHOW_INFO
-            printf( "Lantecy limits not reached: %d\n", maxLatency);
+            printf( "Lantecy limits not reached: %.3f\n", maxLatency);
         #endif
         ok = false;
     }
 
-    if ( results.values.jitter > (float)maxJitter)
+    if ( results.values.jitter > maxJitter)
     {
         results.jitterAlert = true;
         #if SHOW_INFO
-            printf( "Jitter limits not reached: %d\n", maxJitter);
+            printf( "Jitter limits not reached: %.3f\n", maxJitter);
         #endif
         ok = false;
     }
@@ -262,7 +262,7 @@ bool Q4SCommonProtocol::checkStage0(unsigned long maxLatency, unsigned long maxJ
     return ok;
 }
 
-bool Q4SCommonProtocol::checkStage0(unsigned long maxLatencyUp, unsigned long maxJitterUp, unsigned long maxLatencyDown, unsigned long maxJitterDown, Q4SMeasurementResult &upResults, Q4SMeasurementResult &downResults)
+bool Q4SCommonProtocol::checkStage0(float maxLatencyUp, float maxJitterUp, float maxLatencyDown, float maxJitterDown, Q4SMeasurementResult &upResults, Q4SMeasurementResult &downResults)
 {
     bool ok = true;
 
@@ -309,24 +309,24 @@ bool Q4SCommonProtocol::checkStage1(unsigned long bandwidthUp, float packetLossU
     return ok;
 }
 
-bool Q4SCommonProtocol::checkContinuity(unsigned long maxLatency, unsigned long maxJitter, float maxPacketLoss, Q4SMeasurementResult &results)
+bool Q4SCommonProtocol::checkContinuity(float maxLatency, float maxJitter, float maxPacketLoss, Q4SMeasurementResult &results)
 {
     bool ok = true;
     
-    if ( results.values.latency > (float)maxLatency )
+    if ( results.values.latency > maxLatency )
     {
         results.latencyAlert = true;
         #if SHOW_INFO
-            printf( "Lantecy limits not reached: %d\n", maxLatency);
+            printf( "Lantecy limits not reached: %.3f\n", maxLatency);
         #endif
         ok = false;
     }
 
-    if ( results.values.jitter > (float)maxJitter)
+    if ( results.values.jitter > maxJitter)
     {
         results.jitterAlert = true;
         #if SHOW_INFO
-            printf( "Jitter limits not reached: %d\n", maxJitter);
+            printf( "Jitter limits not reached: %.3f\n", maxJitter);
         #endif
         ok = false;
     }
@@ -344,8 +344,8 @@ bool Q4SCommonProtocol::checkContinuity(unsigned long maxLatency, unsigned long 
 }
 
 bool Q4SCommonProtocol::checkContinuity(
-    unsigned long maxLatencyUp, unsigned long maxJitterUp, float maxPacketLossUp, 
-    unsigned long maxLatencyDown, unsigned long maxJitterDown, float maxPacketLossDown, 
+    float maxLatencyUp, float maxJitterUp, float maxPacketLossUp, 
+    float maxLatencyDown, float maxJitterDown, float maxPacketLossDown, 
     Q4SMeasurementResult &upResults, Q4SMeasurementResult &downResults)
 {
     bool ok = true;
