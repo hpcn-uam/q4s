@@ -157,7 +157,7 @@ function dynamic_network(){
 	screen -S screenClient -X at '#' stuff ^C
 	screen -S screenServer -X at '#' stuff ^C
 	scp measured/measure_server.txt measured/dynamic_measurement_server_actuator.txt
-	scp measured/dynamic_actuator.txt measured/dynamic_changes_actuator.txt
+	scp measured/dynamic_actuator.txt measured/dynamic_actuator.txt
 
     echo -e \\n[OK!]
 	tput sgr0

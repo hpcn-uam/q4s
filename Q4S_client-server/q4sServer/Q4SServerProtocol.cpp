@@ -735,7 +735,6 @@ bool Q4SServerProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
     {
         // Check
         upResults.values = upMeasurements;
-        upResults.values.jitter=1.11; 
         ok &= Q4SCommonProtocol::checkContinuity(
             params.latency, params.jitterUp, params.packetLossUp,
             params.latency, params.jitterDown, params.packetLossDown,
