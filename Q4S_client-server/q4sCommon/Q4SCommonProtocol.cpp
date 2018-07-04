@@ -1,5 +1,5 @@
 #include "Q4SCommonProtocol.h"
-
+#include <sys/time.h>
 #include <stdio.h>
 #include "Q4SMessageInfo.h"
 #include "Q4SMessageManager.h"
@@ -67,10 +67,16 @@ void Q4SCommonProtocol::calculateJitter(
     uint64_t actualPingTimeWithPrevious;
     unsigned long packetLossCount = 0;
     int indexReceived= 0; 
-
+    struct timeval time_s;
+    int time_error = gettimeofday(&time_s, NULL); 
+    uint64_t timeStamp =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
     // Prepare for Jitter calculation
+    //printf("TIMESTAMP: %"PRIu64"\n", timeStamp);
     for( pingIndex = 0; pingIndex < pingMaxCount && mReceivedMessages.size()>0; pingIndex++ )
     {
+        time_error = gettimeofday(&time_s, NULL); 
+        timeStamp =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
+        //printf("TIMESTAMP: %"PRIu64"\n", timeStamp);
         if( mReceivedMessages.readPingMessage( pingIndex, messageInfo, true ) == true )
         {
             //printf("*********************************************************************\n");
@@ -82,7 +88,20 @@ void Q4SCommonProtocol::calculateJitter(
             if( !firstPing)
             {
                 // Actual time between this ping and previous calculation
-                actualPingTimeWithPrevious = ( arrReceivedPingTimestamps[ indexReceived ] - arrReceivedPingTimestamps[ indexReceived - 1 ] );
+                /*
+                if (arrReceivedPingTimestamps[ indexReceived ] < arrReceivedPingTimestamps[ indexReceived - 1 ])
+                {
+                    printf("///////////////////////////////////////////////////////////////////////////////////////////");
+                    printf("ERRORR!!!!\n printf(pingIndex: %d     indexReceived:%lu       indexReceived anterior:%lu\n", pingIndex, arrReceivedPingTimestamps[ indexReceived ], arrReceivedPingTimestamps[ indexReceived - 1 ] );
+                    printf("///////////////////////////////////////////////////////////////////////////////////////////");
+                }
+                else
+                {
+                    printf("printf(pingIndex: %d     indexReceived:%lu       indexReceived anterior:%lu\n", pingIndex, arrReceivedPingTimestamps[ indexReceived ], arrReceivedPingTimestamps[ indexReceived - 1 ] );
+                }
+                */
+                actualPingTimeWithPrevious = abs( arrReceivedPingTimestamps[ indexReceived ] - arrReceivedPingTimestamps[ indexReceived - 1 ] );
+                
                 //printf("RESTA PINGS:%"PRIu64"-%"PRIu64"= %"PRIu64"\n",  arrReceivedPingTimestamps[ pingIndex ],arrReceivedPingTimestamps[ indexReceived - 1 ],actualPingTimeWithPrevious); 
                 // Actual time between this ping and previous store
                 arrPingJitters.push_back( (unsigned long)abs((double)actualPingTimeWithPrevious - (double)timeBetweenPings) );
@@ -120,7 +139,7 @@ void Q4SCommonProtocol::calculateJitter(
 
     if (calculatePacketLoss)
     {
-        packetLoss = ((float)packetLossCount/ (float)(pingsSent)) * 100.f;
+        packetLoss = ((float)(pingMaxCount-indexReceived+packetLossCount)/ (float)(pingsSent)) * 100.f;
     }
 
     #if SHOW_INFO2

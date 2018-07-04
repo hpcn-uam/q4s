@@ -316,7 +316,7 @@ void Q4SClientProtocol::continuity(Q4SSDPParams params)
         }
     #if SAVE_INFO
         struct timeval time_s;
-        std::ofstream pFile("../../test/measured/measure_client.txt", ios::out | ios::app);; 
+        std::ofstream pFile("../../test/measured/measure_client.txt", ios::out | ios::app); 
         //pFile = fopen ("measure_client.txt","w");        
         int time_error = gettimeofday(&time_s, NULL); 
         uint64_t actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
@@ -451,6 +451,11 @@ bool Q4SClientProtocol::measureStage0(Q4SSDPParams params, Q4SMeasurementResult 
 bool Q4SClientProtocol::interchangeMeasurementProcedure(Q4SMeasurementValues &downMeasurements, Q4SMeasurementResult results)
 {
     bool ok = true;
+    while(mReceivedMessagesUDP.size()>0)
+    {
+        //printf("BORRANDO MENSAJES\n");
+        mReceivedMessagesUDP.eraseMessages();
+    }
     if ( ok ) 
     {
         // Send Info Ping with sequenceNumber 0
@@ -489,6 +494,12 @@ bool Q4SClientProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
 
     std::vector<uint64_t> arrSentPingTimestamps;
     Q4SMeasurementValues downMeasurements;
+    bool okCancel= true; 
+    struct timeval time_s;   
+    int time_error = gettimeofday(&time_s, NULL); 
+    uint64_t initialTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
+    uint64_t actualTime = initialTime; 
+
     if (ok)
     {
         // Send regular pings
@@ -502,6 +513,13 @@ bool Q4SClientProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
     #endif
     if (ok)
     {
+        while(okCancel && mReceivedMessagesUDP.size()==0)
+        {
+            time_error = gettimeofday(&time_s, NULL);  
+            actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;   
+            okCancel &= (actualTime<(initialTime+5000)); 
+
+        }
         usleep(params.procedure.negotiationTimeBetweenPingsUplink *1000);
 
         // Calculate Latency

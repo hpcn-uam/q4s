@@ -54,6 +54,7 @@ bool Q4SServerProtocol::init()
     }
     if (ok)
     {
+        sem_init(&semHandshake, 0, 0);
         sem_init(&UDPSem, 0, 0);
 
     }
@@ -180,7 +181,8 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
     {
                 //printf("Handshake 0\n");
 
-        // Wait for a message    
+            // Wait for a message  
+            sem_wait(&semHandshake);
             okCancel &= !mReceivedMessagesTCP.readCancelMessage();
             //printf("okCancel= %d", okCancel);
             ok=mReceivedMessagesTCP.readFirst( message );
@@ -635,7 +637,11 @@ bool Q4SServerProtocol::interchangeMeasurementProcedure(Q4SMeasurementValues &up
         actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;   
     }
     
-   
+   while(mReceivedMessagesUDP.size()>0)
+    {
+        //printf("BORRANDO MENSAJES\n");
+        mReceivedMessagesUDP.eraseMessages();
+    }
 
     if ( ok )
     {
@@ -883,6 +889,8 @@ void* Q4SServerProtocol::manageTcpReceivedData( int connId )
             //printf("TCP: %s\n", &buffer);
             std::string message = buffer;
             mReceivedMessagesTCP.addMessage ( message );
+            sem_post(&semHandshake); 
+
         }
     }
     //buffer= "CANCEL\r\n" ;     

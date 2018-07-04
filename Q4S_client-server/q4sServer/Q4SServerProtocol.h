@@ -83,6 +83,8 @@ private:
     pthread_mutex_t             mut_stop;
     int                         qosLevel;
     int                         qosLevelMax; 
+    sem_t                       semHandshake;
+
     //bool                        flagEoS;    
     sem_t                       UDPSem; 
     pthread_t                   sendUDPBW_thread;  

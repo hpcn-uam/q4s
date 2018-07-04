@@ -139,7 +139,7 @@ bool Q4SMessageManager::readPingMessage( int pingIndex, Q4SMessageInfo& messageI
     pthread_mutex_lock (&mut_section);
 //printf("pingIndex: %d\n", pingIndex);
 
-    for( itr_msg = mMessages.begin( ); ( found == false ) && ( itr_msg != mMessages.end( ) ); itr_msg++ )
+    for( itr_msg = prev(mMessages.end( )); ( found == false ) && ( itr_msg != prev(mMessages.begin( )) ); itr_msg-- )
     {
         
         int messagePingIndex;
@@ -158,7 +158,7 @@ bool Q4SMessageManager::readPingMessage( int pingIndex, Q4SMessageInfo& messageI
 
     if (erase && found)
     {
-        itr_msg--;
+        itr_msg++;
         mMessages.erase(itr_msg);
         if( mMessages.size( ) == 0 )
         {
