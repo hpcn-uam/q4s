@@ -382,42 +382,42 @@ void Q4SCommonProtocol::showCheckMessage(Q4SMeasurementResult &upResults, Q4SMea
     #if SHOW_INFO
         if (downResults.latencyAlert)
         {
-            printf( "Lantecy Down bad value: %0.3f\n", downResults.values.latency);
+            printf( "Lantecy Down bad value: %0.3f ms\n", downResults.values.latency);
         }
 
         if (downResults.jitterAlert)
         {
-            printf( "Jitter Down bad value: %0.3f\n", downResults.values.jitter);
+            printf( "Jitter Down bad value: %0.3f ms\n", downResults.values.jitter);
         }
 
         if (downResults.bandwidthAlert)
         {
-            printf( "BandWidth Down bad value: %0.2f\n", downResults.values.bandwidth);
+            printf( "BandWidth Down bad value: %0.2f kb/s\n", downResults.values.bandwidth);
         }
 
         if (downResults.packetLossAlert)
         {
-            printf( "PacketLoss Down bad value: %0.3f\n", downResults.values.packetLoss);
+            printf( "PacketLoss Down bad value: %0.3f %\n", downResults.values.packetLoss);
         }
 
         if (upResults.latencyAlert)
         {
-            printf( "Lantecy Up bad value: %0.3f\n", upResults.values.latency);
+            printf( "Lantecy Up bad value: %0.3f ms\n", upResults.values.latency);
         }
 
         if (upResults.jitterAlert)
         {
-            printf( "Jitter Up bad value: %0.3f\n", upResults.values.jitter);
+            printf( "Jitter Up bad value: %0.3f ms\n", upResults.values.jitter);
         }
 
         if (upResults.bandwidthAlert)
         {
-            printf( "BandWidth Up bad value: %0.2f\n", upResults.values.bandwidth);
+            printf( "BandWidth Up bad value: %0.2f kb/s\n", upResults.values.bandwidth);
         }
 
         if (upResults.packetLossAlert)
         {
-            printf( "PacketLoss Up bad value: %0.3f\n", upResults.values.packetLoss);
+            printf( "PacketLoss Up bad value: %0.3f %\n", upResults.values.packetLoss);
         }
     #endif
 }

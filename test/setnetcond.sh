@@ -26,7 +26,7 @@ function static_network(){
 	#cd ../../test
 	for ms_delay in 0 5 10; 
 	do
-		for jitter_coef in 3 2 1; 
+		for jitter_coef in 2 3 4; 
 		do
 			jitter_max=$(($ms_delay/$jitter_coef))
 			echo $jitter_max
@@ -35,6 +35,8 @@ function static_network(){
 				for bandwidth_max in 50 28 20; 
 				do
 					FileName="client_lt_"$ms_delay"_jt_"$jitter_max"_pl_"$lossprcent"_bw_"$bandwidth_max".txt"
+					FileName2="/home/hpcn/Repos/q4s/test/measured/F1/client_wlan_ping/Ping_client_lt_"$ms_delay"_jt_"$jitter_max"_pl_"$lossprcent"_bw_"$bandwidth_max".txt"
+
 	    			echo $FileName
 
 					sleep 2
@@ -46,12 +48,13 @@ function static_network(){
 	    			screen -S screenClient -d -m ./Q4SClient 
 
 	    			#screen -S screenClient -d -m ssh root@192.168.1.101 ./../home/hpcn/q4s/test/setnetcondF1.sh 
-	    			sleep 60
+	    			ping 192.168.12.101 -c 65  > $FileName2
+	    			./ping-csv.sh -c 65 > $FileName2
 	    			screen -S screenClient -X at '#' stuff ^C
 	    			
 					cd ../../test
 	    			sleep 6
-					scp measured/measure_client.txt "measured/F1/client_lan/client_lt_"$ms_delay"_jt_"$jitter_max"_pl_"$lossprcent"_bw_"$bandwidth_max".txt"
+					scp measured/measure_client.txt "measured/F1/client_wlan_ping/client_lt_"$ms_delay"_jt_"$jitter_max"_pl_"$lossprcent"_bw_"$bandwidth_max".txt"
 					sudo tc qdisc del dev eth0 root
 				done
 			done
@@ -89,15 +92,22 @@ function dynamic_network(){
 	killall screen	    			
 	cd ../Actuador
 	screen -S screenActuador -d -m python actuator_restAPI.py
-	cd ../Q4S_client-server/q4sServer
+	cd ../Q4S_client-server/q4sCLient
+	sudo tc qdisc add dev eth0 root netem delay 0 0 loss random 0%
 
-	screen -S screenServer -d -m ./Q4SServer 
-	screen -S screenClient -d -m ssh root@192.168.1.101 ./../home/hpcn/q4s/test/setnetcondF1.sh 
-	sleep 30
+	screen -S screenServer -d -m ssh root@192.168.1.101 ./../home/hpcn/q4s/test/setnetcondF1.sh 
+	sleep 2
+	screen -S screenClient -d -m ./Q4SClient 
 	cd ../../test
+	time_Now=$(date +"%s")
+	Features='0,0,0,'$time_Now
+	echo $Features	>> real/netem_params_actuador.txt
+	sleep 30
+
+
 	for ms_delay in 10 5 1 9 4 0 7 2 3 2 0 1 4; 
 	do
-		for jitter_coef in 1 2 3; 
+		for jitter_coef in 2 3 4; 
 		do
 			jitter_max=$(($ms_delay/$jitter_coef))
 			for lossprcent in 10 5 1; 
@@ -107,47 +117,38 @@ function dynamic_network(){
 					if ! screen -list | grep -q "screenClient";
 					then 
 						echo end session
-						sudo tc qdisc del dev eth0 root
-						time_Now=$(date +"%s")
-						Features='0,0,0,'$time_Now
-	    				echo $Features	>> real/netem_params_actuador.txt
-						#cat measured/measure_server.txt>>dynamic_measurement_server.txt
-						screen -S screenClient -d -m ssh root@192.168.1.101 ./../home/hpcn/q4s/test/setnetcondF1.sh 
-						sleep 30
-						time_Now=$(date +"%s")
-						Features='0,0,0,'$time_Now
-	    				echo $Features	>> real/netem_params_actuador.txt
-
-					else 
-						sleep 60
-						sudo tc qdisc del dev eth0 root
-						echo $time_Now
+						sudo tc qdisc change dev eth0 root netem delay 0 0 loss random 0%
 						time_Now=$(date +"%s")
 						Features=$ms_delay','$jitter_max','$lossprcent','$time_Now
 	    				echo $Features	>> real/netem_params_actuador.txt
+						#cat measured/measure_server.txt>>dynamic_measurement_server.txt
+						cd ../Q4S_client-server/q4sCLient
+						screen -S screenClient -d -m ./Q4SClient 
+						cd ../../test
+						sleep 30
+
+
+					else 
+						sleep 30
+
 
 					fi
 
 
-					sudo tc qdisc add dev eth0 root netem delay $ms_delay"ms" $jitter_max"ms" loss random $lossprcent"%" & time_Now=$(date +"%s")
+					sudo tc qdisc change dev eth0 root netem delay $ms_delay"ms" $jitter_max"ms" loss random $lossprcent"%" & time_Now=$(date +"%s")
 					echo $time_Now
 					Features=$ms_delay','$jitter_max','$lossprcent','$time_Now
-	    			echo $Features	>> real/netem_params_actuador.txt
+    				echo $Features	>> real/netem_params_actuador.txt
+
+	    			#echo $Features	>> real/netem_params_actuador.txt
 					#screen -d -m ssh root@192.168.1.101 ./../home/hpcn/q4s/test/setnetcondF1.sh 
 
 					
 
 					echo $Features
-	    			#cd ../Q4S_client-server/q4sCLient
-	    			#cd ../q4sCLient
-	    			#screen -S screenClient -d -m ssh root@192.168.1.101 ./../home/hpcn/q4s/test/setnetcondF1.sh 
-	    			sleep 60
-	    			#screen -S screenClient -X at '#' stuff ^C
-	    			
 
-	    			sleep 6
-					#scp measured/measure_server.txt "measured/server_lt_"$ms_delay"_jt_"$jitter_max"_pl_"$lossprcent"_bw_"$bandwidth_max".txt"
-					#sudo tc qdisc del dev eth0 root
+	    			sleep 60
+
 				
 			done
 		done
@@ -156,8 +157,8 @@ function dynamic_network(){
 	# tc qdisc change dev eth1 root netem delay 80ms 10ms
 	screen -S screenClient -X at '#' stuff ^C
 	screen -S screenServer -X at '#' stuff ^C
-	scp measured/measure_server.txt measured/dynamic_measurement_server_actuator.txt
-	scp measured/dynamic_actuator.txt measured/dynamic_actuator.txt
+	scp measured/measure_client.txt measured/dynamic_measurement_client_actuator.txt
+	#scp measured/dynamic_actuator.txt measured/dynamic_actuator.txt
 
     echo -e \\n[OK!]
 	tput sgr0
