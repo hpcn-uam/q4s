@@ -86,7 +86,7 @@ bool Q4SMessage::initResponse(Q4SResponseCode q4SResponseCode, std::string reaso
 
     // Headers
     //makeHeaders(isSequenceNumber, sequenceNumber, isTimeStamp, timeStamp, isStage, stage);
-    mMessage.append("\n"); 
+    mMessage.append("\r\n"); 
     //makeBody(q4SMType); 
 
     return ok; 
@@ -96,7 +96,7 @@ bool Q4SMessage::init200OKBeginResponse(Q4SSDPParams q4SSDPParams)
 {
     bool ok = true;
     //sprintf(mMesZZsage, "200 OK\n%s%lu/%lu\n",QOSLEVEL_PATTERN, params.qosLevelUp, params.qosLevelDown, ALERTINGMODE_PATTERN, params.q4SSDPAlertingMode);
-    mMessage="Q4S/1.0 200 OK\n";
+    mMessage="Q4S/1.0 200 OK\r\n";
     mMessage.append(Q4SSDP_create(q4SSDPParams));
     return ok;
 }
@@ -234,11 +234,10 @@ void Q4SMessage::makeHeaders(
     bool isStage, unsigned long stage,
     bool isMeaurements,
     Q4SMeasurementValues *values)
-    {
+{
     // TODO
-     // Session-Id
-
-     //Sequence-Number
+     // Session-Id     
+    //Sequence-Number
     if (isSequenceNumber)
     {
         mMessage.append("Sequence-Number:");
@@ -254,7 +253,7 @@ void Q4SMessage::makeHeaders(
         mMessage.append("\n");
     }
 
-     //Stage
+    //Stage
     if (isStage)
     {
         mMessage.append("Stage:");
@@ -320,7 +319,7 @@ void Q4SMessage::makeFirstLineResponse(Q4SResponseCode q4SResponseCode, std::str
     mMessage.append(reasonPhrase);
 
     // CRLF
-    mMessage.append("\r\n");
+    //mMessage.append("\r\n");
 }
 
 void Q4SMessage::makeFirstLineResponseStatusCode(Q4SResponseCode q4SResponseCode)

@@ -1,7 +1,6 @@
 #include "Q4SServerStateManager.h"
 #include <stdio.h>
 #include <string.h>
-#include "Q4SServerConfigFile.h"
 
 Q4SServerStateManager::Q4SServerStateManager()
 {
@@ -123,15 +122,17 @@ bool Q4SServerStateManager::stateInit (Q4SServerState state)
             }
         break;
         case Q4SSERVERSTATE_CONTINUITY:
-            {
+            {                
+                std::string alertMessage;
                 bool readyOk = Q4SServerProtocol::ready(mParams);
                 if (readyOk)
                 {
 
+                    alertMessage= "Continuity";
+                    Q4SServerProtocol::alert(alertMessage);
                     Q4SServerProtocol::continuity(mParams);
                 }
 
-                std::string alertMessage;
                 
 
                 nextState = Q4SSERVERSTATE_TERMINATION;

@@ -1,11 +1,9 @@
 #include "Q4SServerStateManager.h"
-#include "Q4SServerConfigFile.h"
 
 
 int main(int argc, char *argv[]) 
 {
 	bool ok;
-
     Q4SServerStateManager q4SServerStateManager;
 
 

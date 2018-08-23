@@ -36,28 +36,37 @@ function static_network(){
 				do
 					FileName="client_lt_"$ms_delay"_jt_"$jitter_max"_pl_"$lossprcent"_bw_"$bandwidth_max".txt"
 					FileName2="/home/hpcn/Repos/q4s/test/measured/F1/client_wlan_ping/Ping_client_lt_"$ms_delay"_jt_"$jitter_max"_pl_"$lossprcent"_bw_"$bandwidth_max".txt"
+					if [ -f "$FileName2" ]
+					then
 
-	    			echo $FileName
+	    				echo $FileName "ya existe"
+	    			else	    				
+	    				echo $FileName "NO existe"
 
-					sleep 2
-					echo sudo tc qdisc add dev eth0 root netem delay $ms_delay"ms" $jitter_max"ms" loss random $lossprcent"%" rate $bandwidth_max"Mbit"
 
-					sudo tc qdisc add dev eth0 root netem delay $ms_delay"ms" $jitter_max"ms" loss random $lossprcent"%" rate $bandwidth_max"Mbit"
-	    			cd ../Q4S_client-server/q4sCLient
-	    			
-	    			screen -S screenClient -d -m ./Q4SClient 
+						sleep 2
+						echo sudo tc qdisc add dev eth0 root netem delay $ms_delay"ms" $jitter_max"ms" loss random $lossprcent"%" rate $bandwidth_max"Mbit"
 
-	    			#screen -S screenClient -d -m ssh root@192.168.1.101 ./../home/hpcn/q4s/test/setnetcondF1.sh 
-	    			ping 192.168.12.101 -c 65  > $FileName2
-	    			./ping-csv.sh -c 65 > $FileName2
-	    			screen -S screenClient -X at '#' stuff ^C
-	    			
-					cd ../../test
-	    			sleep 6
-					scp measured/measure_client.txt "measured/F1/client_wlan_ping/client_lt_"$ms_delay"_jt_"$jitter_max"_pl_"$lossprcent"_bw_"$bandwidth_max".txt"
-					sudo tc qdisc del dev eth0 root
+						sudo tc qdisc add dev eth0 root netem delay $ms_delay"ms" $jitter_max"ms" loss random $lossprcent"%" rate $bandwidth_max"Mbit"
+		    			cd ../Q4S_client-server/q4sCLient
+		    			
+		    			screen -S screenClient -d -m ./Q4SClient 
+
+		    			#screen -S screenClient -d -m ssh root@192.168.1.101 ./../home/hpcn/q4s/test/setnetcondF1.sh 
+		    			#ping 192.168.12.103 -c 65  > $FileName2
+		    			cd ../../test
+		    			./ping-csv.sh 192.168.1.101 -c 50 >$FileName2
+		    			#sleep 50
+		    			screen -S screenClient -X at '#' stuff ^C
+		    			
+						
+		    			sleep 6
+						scp measured/measure_client.txt "measured/F1/client_wlan_ping/server_lt_"$ms_delay"_jt_"$jitter_max"_pl_"$lossprcent"_bw_"$bandwidth_max".txt"
+						sudo tc qdisc del dev eth0 root
+					fi
+
 				done
-			done
+			done		
 		done
 	done	    			
 	screen -S screenServer -X at '#' stuff ^C
@@ -95,7 +104,7 @@ function dynamic_network(){
 	cd ../Q4S_client-server/q4sCLient
 	sudo tc qdisc add dev eth0 root netem delay 0 0 loss random 0%
 
-	screen -S screenServer -d -m ssh root@192.168.1.101 ./../home/hpcn/q4s/test/setnetcondF1.sh 
+	screen -S screenServer -d -m ssh root@192.168.1.103 ./../home/hpcn/q4s/test/setnetcondF1.sh 
 	sleep 2
 	screen -S screenClient -d -m ./Q4SClient 
 	cd ../../test
@@ -157,7 +166,7 @@ function dynamic_network(){
 	# tc qdisc change dev eth1 root netem delay 80ms 10ms
 	screen -S screenClient -X at '#' stuff ^C
 	screen -S screenServer -X at '#' stuff ^C
-	scp measured/measure_client.txt measured/dynamic_measurement_client_actuator.txt
+	scp measured/measure_client.txt measured/dynamic_measurement_client_lan.txt
 	#scp measured/dynamic_actuator.txt measured/dynamic_actuator.txt
 
     echo -e \\n[OK!]

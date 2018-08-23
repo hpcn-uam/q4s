@@ -754,7 +754,7 @@ void* Q4SClientProtocol::manageUdpReceivedData( )
                 #endif
                 Q4SMessage message200;
                 //printf(" RECEIVED TIMESTAMP: %lu TIMESTAMP MESSAGE: %lu\n", receivedTimeStamp, );
-                sprintf( reasonPhrase, "Q4S/1.0 200 OK\nSequence-Number: %d\nTimestamp: %"PRIu64"\n", pingNumber,receivedTimeStamp );
+                sprintf( reasonPhrase, "Q4S/1.0 200 OK\nSequence-Number: %d\nTimestamp: %"PRIu64"\r\n", pingNumber,receivedTimeStamp );
                 ok &= mClientSocket.sendUdpData( reasonPhrase );
 
                 #if SHOW_INFO2
@@ -842,11 +842,12 @@ void* Q4SClientProtocol::manageTcpReceivedData( )
 
     while (ok) 
     {    
+        
         memset(buffer, 0, sizeof(buffer));
         ok &= mClientSocket.receiveTcpData( buffer, sizeof( buffer ) );
         if( ok )
         {
-            //printf("%s\n", &buffer);
+            printf("%s\n", &buffer);
             std::string message = buffer;
             mReceivedMessagesTCP.addMessage ( message );
         }

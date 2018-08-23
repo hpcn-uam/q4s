@@ -13,8 +13,7 @@ def main():
     port_number= 27017
     coder_ip = '127.0.0.1'
     coder_port= 55555  
-    http_ip = '192.168.1.102'
-    http_port= 5050
+    
     
     print 'HELLO'
     try:
@@ -42,7 +41,7 @@ class UDPHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         flag_Termination= False
-
+        flag_Continuity= False
         level = self.server.level
         flag_p_size= self.server.flag_p_size
         packet_size=self.server.packet_size
@@ -51,8 +50,8 @@ class UDPHandler(SocketServer.BaseRequestHandler):
         data = data.decode("utf-8")
         coder_ip = self.server.coder_direction[0]
         coder_port = self.server.coder_direction[1]
-        latency, jitter, bandwidth, packetloss, flag_Termination = parse_metrics(data)
-        flag_p_size, level, QoSlevel,packet_size,ts,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, level, flag_p_size, QoSlevel, packet_size)
+        latency, jitter, bandwidth, packetloss, flag_Termination, flag_Continuity = parse_metrics(data)
+        flag_p_size, level, QoSlevel,packet_size,ts,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, level, flag_p_size, QoSlevel, packet_size,flag_Termination,flag_Continuity)
         self.server.level= level
         self.server.flag_p_size= flag_p_size
         self.server.QoSlevel= QoSlevel
@@ -87,60 +86,43 @@ class UDPHandler(SocketServer.BaseRequestHandler):
         """      
         return
 
-"""
-def send_coder_parameters(coder_ip, coder_port, discard_level, frame_skipping):
-    #Send the parameters given to the Ip and port via HTTP.
 
-    conn = http.client.HTTPConnection(coder_ip, coder_port)
-    try:
-        conn.request('POST', '/discard/' + str(discard_level))
-    except ConnectionRefusedError:
-        print("ERROR: Not listening coder in ", coder_ip, ":", str(coder_port))
-        conn.close()
-        return False, False
-    res = conn.getresponse()
-    status_1 = res.status
 
-    try:
-        conn.request('POST', '/skip/' + str(frame_skipping))
-    except ConnectionRefusedError:
-        print("ERROR: Not listening coder in ", coder_ip, ":", str(coder_port))
-        conn.close()
-        if status_1 == 200:
-            return True, False
-        return False, False
-    res = conn.getresponse()
-    status_2 = res.status
-
-    conn.close()
-    return status_1 == 200, status_2 == 200
-"""
-
-def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_size,QoSlevel, packet_size):
+def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_size,QoSlevel, packet_size,flag_Termination,flag_Continuity):
     """ From the network Q4S parameters generats the coder options."""
     #pylint: disable=unused-argument
     pl_flag=False
     lt_flag=False
     BW_flag=False
     jt_flag=False 
+    with open("../Q4S_client-server/q4sServer/ejemplo.txt", "r") as text_file:
+            BW_up = text_file.readline()
+            BW_down = text_file.readline()
+            text_file.close()
     fps=0
     clr=0
     rs= 0
-    dim_packet= [1,160],[2,128],[1,640], [6,128],[8,128],[10,128]
+    st=0
+    dim_packet= [1,320],[1,640],[6,160],[8,128]
 
     """""""""""""""""""""""""""""""""""""""""
     AQUI HAY QUE PONER UMBRALES REALES
     """""""""""""""""""""""""""""""""""""""""
+    if flag_Termination:
+        os.system("screen -S screenDecodec -X at '#' stuff S^M")
+    elif flag_Continuity:
+        os.system('screen -S screenDecodec -d -m ./LHEPacketizer.out -rc 192.168.1.104 --pipe /home/hpcn/Repos/Packetization-LHE/dummy')
+
     print "Jitter calculate_parameters:", jitter
     if packetloss > 5:
         pl_flag=True
         if packet_size==0:
             flag_p_size=False
     if latency>5.5:
-        if packet_size==5:
+        if packet_size==3:
             flag_p_size=False
         lt_flag=True
-    if bandwidth < 20:
+    if bandwidth < float(BW_up):
         BW_flag=True
     if jitter > 1.1:
         jt_flag=True
@@ -168,62 +150,60 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
         QoSlevel+=1
 
     
-    if level==0: 
-        fps=1
+    if level<=0: 
+        fps=2
         clr=1
         rs= 0
     elif level== 1:
-        fps=1
-        clr=0
+        fps=3
+        clr=1
         rs= 0
     elif level== 2:
         #CAMBIAR RESOLUCION
-        fps=1
+        fps=4
         clr=1
         rs= 1
         #CAMBIAR FPS
     elif level== 3:
-        fps=1
+        fps=4
         clr=0
         rs= 1
     elif level== 4:
-        fps=2
+        fps=5
         clr=1
         rs= 1
     elif level== 5:
-        fps=2
-        clr=0
-        rs= 1
-    elif level== 6:
-        fps=3
-        clr=1
-        rs= 1
-    elif level== 7:
-        fps=3
-        clr=0
-        rs= 1
-    elif level== 8:
-        fps=4
-        clr=1
-        rs= 1
-    elif level== 9:
-        fps=4
-        clr=0
-        rs= 1
-    elif level== 10: #LO MaS BAJO POSIBLE, ES EL ULTIMO NIVEL
         fps=5
         clr=0
         rs= 1
-    params = urllib.urlencode({'fps': fps, 'clr': clr, 'rs': rs, 'wp':dim_packet[packet_size][1] ,'hp':dim_packet[packet_size][0]}) 
+    elif level== 6:
+        fps=6
+        clr=1
+        rs= 1
+    elif level== 7:
+        fps=6
+        clr=0
+        rs= 1
+    elif level== 8:
+        fps=8
+        clr=1
+        rs= 1
+    elif level== 9:
+        fps=8
+        clr=0
+        rs= 1
+    elif level>= 10: #LO MAS BAJO POSIBLE, ES EL ULTIMO NIVEL
+        fps=12
+        clr=0
+        rs= 1
+    params = urllib.urlencode({'st':st, 'fps': fps, 'clr': clr, 'rs': rs, 'wp':dim_packet[packet_size][1] ,'hp':dim_packet[packet_size][0]}) 
     ts= time.time()
     #with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
     #        text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr,QoSlevel))
-    print "before headers"
     headers = {"Content-type": "","Accept": "text/plain"}
-    print "BEFORE CONN"
+
     conn = httplib.HTTPConnection('192.168.1.102',5050)
     conn.request("POST","",params, headers)
-    print "BEFORE GET RESPONSE"
     res = conn.getresponse()
 
     return flag_p_size, level, QoSlevel, packet_size,ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr
@@ -234,10 +214,14 @@ def parse_metrics(text):
     latency = float('nan')
     jitter = float('nan')
     bandwidth = float('nan')
+    bandwidth = 100000
     packetloss = float('nan')
     flag_Termination=False
+    flag_Continuity=False
     text = text.split()
     if text[1]=="Termination":
+        flag_Termination=True
+    if text[1]=="Continuity":
         flag_Termination=True
     print text
     for index, word in enumerate(text[:-1]):
@@ -262,7 +246,7 @@ def parse_metrics(text):
                 bandwidth = float(text[index+1])
             except ValueError:
                 bandwidth = float('nan')
-    return latency, jitter, bandwidth, packetloss, flag_Termination
+    return latency, jitter, bandwidth, packetloss, flag_Termination, flag_Continuity
 
 
 def parse_arguments(argv):

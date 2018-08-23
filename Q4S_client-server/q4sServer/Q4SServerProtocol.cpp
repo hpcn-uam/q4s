@@ -29,7 +29,6 @@ bool Q4SServerProtocol::init()
 {
     // Prevention done call
     //done();
-
     bool ok = true;
     bool okReceivedMessages = true;
     //flagEoS= false; 
@@ -250,20 +249,27 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
     */
     Q4SMeasurementResult upResults;
     Q4SMeasurementResult resultAlert;
+    unsigned long auxBW;
     for( QOS_negotiation = 0; (measureOk  == false ) && ( QOS_negotiation!= 11 ) && (ok==true) ; QOS_negotiation++ )
     {
         #if SHOW_INFO
             printf("QOS level: %d\n", QOS_negotiation);
         #endif 
         if (ok)
-        {        
+        { 
+            std::ifstream BWFile("ejemplo.txt", ios::in | ios::app);
+            BWFile >>auxBW;
+            params.bandWidthUp = auxBW;
+            BWFile >>auxBW;
+            params.bandWidthDown = auxBW;
+
+            params.qosLevelUp = QOS_negotiation;
+            params.qosLevelDown = QOS_negotiation;
+  
+
             ok &= Q4SServerProtocol::ready(params);
 
             //printf("MEASURING\n");
-            params.bandWidthUp = q4SServerConfigFile.bandwidthUp[QOS_negotiation];
-            params.bandWidthDown = q4SServerConfigFile.bandwidthDown[QOS_negotiation];
-            params.qosLevelUp = QOS_negotiation;
-            params.qosLevelDown = QOS_negotiation;
 
             measureOk = Q4SServerProtocol::measureStage0(params, results, upResults, params.procedure.windowSizeLatencyCalcDownlink);   
 
@@ -329,6 +335,7 @@ void Q4SServerProtocol::continuity(Q4SSDPParams params)
     char data2save[200]={}; 
     Q4SMeasurementResult upResults;
     Q4SMeasurementResult results;
+    unsigned long auxBW; 
 
     while ( !stop1)
     {
@@ -339,6 +346,12 @@ void Q4SServerProtocol::continuity(Q4SSDPParams params)
         */
         //printf("MEASURING\n");
         
+        std::ifstream BWFile("ejemplo.txt", ios::in | ios::app);
+        BWFile >>auxBW;
+        params.bandWidthUp = auxBW;
+
+        BWFile >>auxBW;
+        params.bandWidthDown = auxBW;
 
         measureOk = Q4SServerProtocol::measureContinuity(params, results, upResults, params.procedure.windowSizeLatencyCalcDownlink);
         stop1 = mReceivedMessagesTCP.readCancelMessage();
@@ -433,7 +446,7 @@ void Q4SServerProtocol::alert(std::string alertMessage)
     uint64_t actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
     uint64_t timeFromLastAlert = actualTime - lastAlertTimeStamp;
 
-    if ( timeFromLastAlert > q4SServerConfigFile.alertPause | alertMessage=="Termination")
+    if ( timeFromLastAlert > q4SServerConfigFile.alertPause | alertMessage=="Termination" | alertMessage=="Continuity")
     {
         qosLevel++;
         lastAlertTimeStamp = actualTime;
@@ -442,6 +455,10 @@ void Q4SServerProtocol::alert(std::string alertMessage)
         printf("ENVIO ALERT\n");
         #endif
         mServerSocket.sendAlertData(message.c_str());
+    }
+    if ( alertMessage=="Continuity")
+    {
+        qosLevel--;
     }
 }
 
@@ -886,13 +903,15 @@ void* Q4SServerProtocol::manageTcpReceivedData( int connId )
     bool                ok = true;
     char                buffer[ 65536 ]={};    
     struct timeval time_s;
-    int time_error;            
+    int time_error;   
+    memset(buffer, 0, sizeof(buffer));         
     while( ok ) 
     {
+        memset(buffer, 0, sizeof(buffer));
         ok &= mServerSocket.receiveTcpData( connId, buffer, sizeof( buffer ) );
         if( ok )
         {
-            //printf("TCP: %s\n", &buffer);
+            printf("TCP: %s\n", &buffer);
             std::string message = buffer;
             mReceivedMessagesTCP.addMessage ( message );
             sem_post(&semHandshake); 
@@ -948,7 +967,7 @@ void* Q4SServerProtocol::manageUdpReceivedData( )
                     printf( "Ping responsed %d\n", pingNumber);
                 #endif
                 Q4SMessage message200;
-                sprintf( reasonPhrase, "Q4S/1.0 200 OK\nSequence-Number: %d\nTimestamp: %"PRIu64"\n", pingNumber,receivedTimeStamp );
+                sprintf( reasonPhrase, "Q4S/1.0 200 OK\nSequence-Number: %d\nTimestamp: %"PRIu64"\r\n", pingNumber,receivedTimeStamp );
 
                 ok &= mServerSocket.sendUdpBWData( connId, reasonPhrase );
 
