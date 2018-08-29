@@ -26,7 +26,7 @@ class Q4SMessageManager
     bool readMessage( std::string& pattern, Q4SMessageInfo& messageInfo, bool erase );
     bool readPingMessage( int pingIndex, Q4SMessageInfo& messageInfo, bool erase );
     bool read200OKMessage( Q4SMessageInfo& messageInfo, bool erase, uint64_t *TimestampPing, int *sequenceNumberPing  );
-    bool readBandWidthMessage(unsigned long &sequenceNumber, bool erase, uint64_t *timestampBW);
+    bool readBandWidthMessage(unsigned long &sequenceNumber, bool erase, uint64_t *timestampBW, int *BWpacket_size);
     bool readmMessages();
     int size() const;
     bool eraseMessages();

@@ -232,7 +232,7 @@ bool Q4SMessageManager::eraseMessages()
         return ok; 
 }
 
-bool Q4SMessageManager::readBandWidthMessage(unsigned long &sequenceNumber, bool erase, uint64_t *timestampBW)
+bool Q4SMessageManager::readBandWidthMessage(unsigned long &sequenceNumber, bool erase, uint64_t *timestampBW, int *BWpacket_size)
 {
     bool    found = false;
     std::list< Q4SMessageInfo >::iterator  itr_msg;
@@ -245,12 +245,14 @@ bool Q4SMessageManager::readBandWidthMessage(unsigned long &sequenceNumber, bool
     for( itr_msg = mMessages.begin( ); ( found == false ) && ( itr_msg != mMessages.end( ) ); itr_msg++ )
     {
        int messagePingIndex;
-       if (Q4SMessageTools_isBandWidthMessage(itr_msg->message, &messagePingIndex))
+       int BWpacket_size_a; 
+       if (Q4SMessageTools_isBandWidthMessage(itr_msg->message, &messagePingIndex,&BWpacket_size_a))
        {
             // Message found.
             found = true;
-           sequenceNumber = messagePingIndex;
-           *timestampBW= itr_msg->timeStamp; 
+            *BWpacket_size = BWpacket_size_a;
+            sequenceNumber = messagePingIndex;
+            *timestampBW= itr_msg->timeStamp; 
            //printf("%lu\n", itr_msg->timeStamp);
        }
     }

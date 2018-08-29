@@ -15,7 +15,10 @@ endif
 ifeq ($(SAVE_INFO), 1)  #at this point, the makefile checks if FEATURE is enabled
 SAVE = -DSAVE_INFO 
 endif
+ifeq ($(PLOT_INFO), 1)  #at this point, the makefile checks if FEATURE is enabled
+PLOT1 = -DPLOT_INFO 
+endif
 all:
-	$(CC) $(HEADERS_COMMON) $(HEADERS_SERVER) $(FILE_COMMON) $(FILE_SERVER) $(DEBUG_FLAGS) $(FLAGS) -o $(OBJ) $(SHOW1) $(SHOW2) $(SAVE)
+	$(CC) $(HEADERS_COMMON) $(HEADERS_SERVER) $(FILE_COMMON) $(FILE_SERVER) $(DEBUG_FLAGS) $(FLAGS) -o $(OBJ) $(SHOW1) $(SHOW2) $(SAVE) $(PLOT1)
 clean:
 	rm -rf $(OBJ) *~* 

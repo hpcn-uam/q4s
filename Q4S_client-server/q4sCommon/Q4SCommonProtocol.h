@@ -65,7 +65,7 @@ class Q4SCommonProtocol
 								bool calculatePacketLoss, 
 								float &packetLoss, 
 								bool showMeasureInfo);
-		std::set<unsigned long> obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<uint64_t> &TimeStamplist);
+		std::set<unsigned long> obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<uint64_t> &TimeStamplist, int &BWpacket_size);
 		int contador= 0; 
 	/*
 	// TEST

@@ -11,6 +11,7 @@
 //#include "EKey.h"
 #include "../q4sCommon/Q4SMessage.h"
 #include "../q4sCommon/Q4SMessageTools.h"
+static const char alphanum[] ="0123456789!@#$%^&*ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 Q4SClientProtocol::Q4SClientProtocol ()
 {
     clear();
@@ -215,9 +216,14 @@ bool Q4SClientProtocol::negotiation(Q4SSDPParams params, Q4SMeasurementResult &r
     int QOS_negotiation;
     Q4SMeasurementResult downResults;
     char data2save[200]={}; 
-
+    char command_curl[300]={}; 
+    unsigned long auxBW;
+    int pck_size; 
     for( QOS_negotiation = 0; (measureOk  == false ) && ( QOS_negotiation!= 11 ); QOS_negotiation++ )
     {
+        std::ifstream BWFile("packet_size.txt", ios::in | ios::app);
+        BWFile >>pck_size;
+        params.size_packet = pck_size;
         ok &= Q4SClientProtocol::ready(0, params);
         if( ok )
         {
@@ -246,6 +252,11 @@ bool Q4SClientProtocol::negotiation(Q4SSDPParams params, Q4SMeasurementResult &r
         sprintf(data2save, "0\t%"PRIu64"\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%d\n",actualTime,results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.bandwidth, downResults.values.bandwidth,results.values.packetLoss, downResults.values.packetLoss,QOS_negotiation, measureOk); 
         pFile<<data2save;
     #endif
+    #if PLOT_INFO
+        sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,BW_up=%.3f,BW_down=%.3f,loss_up=%.3f,loss_down=%.3f,'",results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.bandwidth, downResults.values.bandwidth,results.values.packetLoss, downResults.values.packetLoss);
+        system(command_curl);
+        
+    #endif
     }    
     //printf("SALIENDO DE NEGOTIATION: %d\n", measureOk);
     qosLevel= params.qosLevelUp;
@@ -265,7 +276,7 @@ void Q4SClientProtocol::continuity(Q4SSDPParams params)
     bool stop = false;
     bool measureOk = true;
     char data2save[200]={}; 
-
+    char command_curl[300]={}; 
     Q4SMeasurementResult results;
     Q4SMeasurementResult downResults;
     while ( !stop )
@@ -323,6 +334,11 @@ void Q4SClientProtocol::continuity(Q4SSDPParams params)
         sprintf(data2save, "1\t%"PRIu64"\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%d\n",actualTime,results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.bandwidth, downResults.values.bandwidth,results.values.packetLoss, downResults.values.packetLoss,qosLevel, measureOk); 
         pFile<<data2save;
         //fclose(pFile); 
+    #endif
+    #if PLOT_INFO
+        sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3floss_up=%.3f,loss_down=%.3f,'",results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.packetLoss, downResults.values.packetLoss);
+        system(command_curl);
+        
     #endif
 
     }
@@ -615,6 +631,7 @@ bool Q4SClientProtocol::measureStage1(Q4SSDPParams params, Q4SMeasurementResult 
     //const unsigned long* bandWidthDown = (long unsigned int*)malloc(sizeof(bandWidthDown)); 
     bandWidthDown = params.bandWidthDown;
     Q4SMeasurementValues downMeasurements;
+    size_packet= params.size_packet;
 
     pthread_create(&sendUDPBW_thread, NULL, sendUDPBWFn, ( void* ) this);
 
@@ -847,7 +864,7 @@ void* Q4SClientProtocol::manageTcpReceivedData( )
         ok &= mClientSocket.receiveTcpData( buffer, sizeof( buffer ) );
         if( ok )
         {
-            printf("%s\n", &buffer);
+            //printf("%s\n", &buffer);
             std::string message = buffer;
             mReceivedMessagesTCP.addMessage ( message );
         }
@@ -859,15 +876,15 @@ void* Q4SClientProtocol::sendUDPBWFn(void* lpData )
     Q4SClientProtocol* q4sCP = ( Q4SClientProtocol* )lpData;    
     //unsigned long bandWidthDown=*(); 
 
-    bool ret = q4sCP->sendUDPBW(q4sCP->bandWidthDown);
+    bool ret = q4sCP->sendUDPBW(q4sCP->bandWidthDown, q4sCP->size_packet);
 }
- void *Q4SClientProtocol::sendUDPBW(unsigned long bandWidthDown)
+ void *Q4SClientProtocol::sendUDPBW(unsigned long bandWidthDown, int size_packet)
  {   
     char message_char[2048] = {0};
     bool ok= true; 
     //unsigned long bandWidthDown= (unsigned long) 100000; 
     //unsigned long bandWidthDown=*((unsigned long*)bandWidthDownParam); 
-    float message_size= 1000*8; 
+    float message_size= size_packet*8; 
     float bandWidthDownInc= (float)bandWidthDown*1.16; // Se multiplica por 1.16 para dejar un margen superior 
 
     float messages_fract_per_ms = (bandWidthDownInc/ (float) message_size);
@@ -879,6 +896,13 @@ void* Q4SClientProtocol::sendUDPBWFn(void* lpData )
     int ms_per_message[11]={0};
     ms_per_message[0] = 1;
     int divisor;
+    char msn_BW[size_packet]={0}; 
+    for(int z=0; z < size_packet; z++)
+    {
+        
+        msn_BW[z]= alphanum[rand() % (sizeof(alphanum)-1)];
+
+    }
     for (int i = 0; i < 10; i++) 
     {
         divisor = 2;
@@ -940,9 +964,8 @@ void* Q4SClientProtocol::sendUDPBWFn(void* lpData )
 //printf("********************************\n");
 //gettimeofday(&time_s0, NULL); 
                 //ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SClientConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
-            sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%d\nTimestamp:%"PRIu64"\r\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-            sequenceNumber,TimeStamp2);
+             sprintf(message_char,
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%d\nTimestamp:%"PRIu64"\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
 //gettimeofday(&time_s1, NULL); 
 //printf("Cost initRequest: %lus%luus\n",(time_s1.tv_sec-time_s0.tv_sec),(time_s1.tv_usec-time_s0.tv_usec));
 //gettimeofday(&time_s0, NULL); 
@@ -959,9 +982,8 @@ void* Q4SClientProtocol::sendUDPBWFn(void* lpData )
             if (ms_per_message[k] > 0 && interval % ms_per_message[k] == 0) 
             {        
                 //printf("mensahe extra %d, %d, %d, %d\n", interval, ms_per_message[k], k, sizeof(ms_per_message));
-                sprintf(message_char,
-                "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%d\nTimestamp:%"PRIu64 "\r\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-                sequenceNumber,TimeStamp2);
+                 sprintf(message_char,
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%d\nTimestamp:%"PRIu64"\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
                 //ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SClientConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
                 ok &= mClientSocket.sendUdpBWData(message_char);
                 sequenceNumber++;  

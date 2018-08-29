@@ -36,7 +36,7 @@ public:
 
 
 private:
-
+    
     void    clear();
     bool    openConnectionListening();
     void    closeConnectionListening();
@@ -72,11 +72,12 @@ private:
     static void*                manageUdpReceivedDataFn( void* lpData );
     void*                       manageBWReceivedData( );    
     static void*                manageBWReceivedDataFn( void* lpData);
-    void*                       sendUDPBW(unsigned long bandWidthUp);
+    void*                       sendUDPBW(unsigned long bandWidthUp, int size_packet);
     static void*                sendUDPBWFn(void* BWinfoFn );
     Q4SMessageManager           mReceivedMessagesTCP;    
     Q4SMessageManager           mReceivedMessagesUDP;
     unsigned long               bandWidthUp; 
+    int                         size_packet; 
     uint64_t                    lastAlertTimeStamp;
     uint64_t                    recoveryTimeStamp;
     //unsigned long               expiratedTimeStamp;

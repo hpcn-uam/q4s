@@ -169,17 +169,20 @@ void Q4SCommonProtocol::calculateJitterAndPacketLossContinuity(
     calculateJitter(mReceivedMessages, jitter, timeBetweenPings, pingsSent, true, packetLoss, showMeasureInfo);
 }
 
-std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<uint64_t> &TimeStamplist)
+std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMessageManager &mReceivedMessages, std::set<uint64_t> &TimeStamplist, int &BWpacket_size)
 {
     std::set<unsigned long> recivedSequenceNumberList;
     uint64_t timeStamp; 
+    int packet_size; 
     unsigned long messageSequenceNumber;
     bool flag=true; 
-    while (mReceivedMessages.readBandWidthMessage(messageSequenceNumber, true, &timeStamp) && flag)
+    while (mReceivedMessages.readBandWidthMessage(messageSequenceNumber, true, &timeStamp, &packet_size) && flag)
     {
+//printf("TAMAÑO obtainSortedSequenceNumberList:%s\n", packet_size);
         flag= mReceivedMessages.size()!=1; 
         TimeStamplist.insert(timeStamp);
-        //printf("%lu, %lu\n", timeStamp, messageSequenceNumber);
+        BWpacket_size=packet_size;
+        //printf("time SEQ:%lu, %lu\n", timeStamp, messageSequenceNumber);
         recivedSequenceNumberList.insert(messageSequenceNumber);
 
     }
@@ -192,9 +195,9 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
 {
     bool ok = false;
     std::set<uint64_t> TimeStamplist;
+    int BWpacket_size=0; 
     packetLoss = 0;
-    std::set<unsigned long> recivedSequenceNumberList = obtainSortedSequenceNumberList(mReceivedMessages, TimeStamplist);
-
+    std::set<unsigned long> recivedSequenceNumberList = obtainSortedSequenceNumberList(mReceivedMessages, TimeStamplist, BWpacket_size);
     if (!recivedSequenceNumberList.empty())
     {
         unsigned long packetLossCount = 0;
@@ -248,7 +251,8 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
         //printf("timestamp end: %lu\n", TimeStampEnd);
         //printf("timestamp begin: %lu\n", TimeStampInit);
         //printf("DIFERENCIA TIMESTAMP: %f\n", ATimestamp);       
-        float numberOfkilobytesPerSecond = (float)sequenceNumber * 1000.f / (ATimestamp);//1066
+
+        float numberOfkilobytesPerSecond = (float)sequenceNumber * (float)BWpacket_size / (ATimestamp);//1066
         float kilobitsPerSecond = numberOfkilobytesPerSecond * 8;
         bandwidth = kilobitsPerSecond;
     }

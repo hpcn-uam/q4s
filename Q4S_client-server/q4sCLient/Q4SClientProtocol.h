@@ -48,7 +48,7 @@ private:
     static void*    manageUdpReceivedDataFn( void* lpData);
     void*           sendUDPBW();
     static void*    sendUDPBWFn(void* BWinfoFn );
-    void*           sendUDPBW(unsigned long bandWidthDown);
+    void*           sendUDPBW(unsigned long bandWidthDown, int size_packet);
     void*           manageTcpReceivedData( );
     static void*    manageTcpReceivedDataFn(void* lpData );
     unsigned long  bandWidthDown; 
@@ -60,6 +60,7 @@ private:
     pthread_t                   marrthrHandle[ 2 ]; 
     int                         qosLevel;
     int                         qosLevelMax; 
+    int                         size_packet; 
     uint64_t                    lastAlertTimeStamp;
     uint64_t                    recoveryTimeStamp;
     sem_t                       UDPSem; 

@@ -162,7 +162,7 @@ bool Q4SMessageTools_is200OKMessage(std::string message)
 
     return ok;
 }
-bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber)
+bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber, int *BWpacket_size)
 {
     bool ok = true;
 
@@ -170,8 +170,9 @@ bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber
     std::string extracted;
 
     // Convert message to a stringstream 
-    std::istringstream messageStream (message);
 
+
+    std::istringstream messageStream (message);
     // Get method from message
     if ( ok )
     {
@@ -194,6 +195,8 @@ bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber
     {
         std::string sequenceNumberLineFirstPart;
         std::string sequenceNumberLineSecondPart;
+        std::string aux;        
+        std::string body_msn;
 
         // Check text
         std::string sequenceNumberText = "Sequence-Number";
@@ -203,6 +206,15 @@ bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber
         {
             *sequenceNumber = std::stoi(sequenceNumberLineSecondPart);
         }
+        
+
+        getline( messageStream, extracted,'\n'); 
+        body_msn= messageStream.str();         
+        getline( messageStream, extracted); 
+        *BWpacket_size= extracted.size(); 
+        
+
+
     }    
     return ok;
 }

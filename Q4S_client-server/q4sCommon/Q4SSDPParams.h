@@ -35,6 +35,7 @@ struct Q4SSDPParams
 {
     int qosLevelUp; 
     int qosLevelDown; 
+    int size_packet; 
     Q4SSDPAlertingMode q4SSDPAlertingMode; 
     unsigned long alertPause;
     unsigned long recoveryPause;
