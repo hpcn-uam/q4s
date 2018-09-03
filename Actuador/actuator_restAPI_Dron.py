@@ -7,6 +7,7 @@ import getopt
 import time
 import urllib
 import os
+import time
 def main(): 
     port_number= 27017
     coder_ip = '127.0.0.1'
@@ -20,9 +21,10 @@ def main():
         #    ts= time.time()
         #   text_file.write("%f,0,0,0,0,0,0\n"%ts)
         server = socketserver.UDPServer(('', port_number), UDPHandler)
-        connHTTP = http.client.HTTPConnection("192.168.1.104:5050")
+        connHTTP = http.client.HTTPConnection("192.168.1.105:5050")
         server.level= 0
         server.flag_p_size= True
+        server.flag_Continuity=False
         server.QoSlevel= 0
         server.packet_size=2
         server.coder_direction = (coder_ip, coder_port)
@@ -39,7 +41,7 @@ class UDPHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         flag_Termination= False
-
+        flag_Continuity= self.server.flag_Continuity
         level = self.server.level
         flag_p_size= self.server.flag_p_size
         packet_size=self.server.packet_size
@@ -48,10 +50,16 @@ class UDPHandler(socketserver.BaseRequestHandler):
         data = data.decode("utf-8")
         coder_ip = self.server.coder_direction[0]
         coder_port = self.server.coder_direction[1]
-        latency, jitter, bandwidth, packetloss, flag_Termination = parse_metrics(data)
-        flag_p_size, level, QoSlevel,packet_size,ts,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, level, flag_p_size, QoSlevel, packet_size)
+        latency, jitter, bandwidth, packetloss, flag_Termination,flag_Continuity = parse_metrics(data)
+        if flag_Continuity:
+            os.system("ssh hpcn@192.168.1.102 'cd Repos/Packetization-LHE;screen -S screenDecodec -d -m ./LHEPacketizer.out -rc 192.168.1.104 --pipe /home/hpcn/Repos/Packetization-LHE/dummy'")
+            time.sleep(3)
+
+        
+        flag_p_size, level, QoSlevel,packet_size,ts,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, level, flag_p_size, QoSlevel, packet_size,flag_Continuity)
         self.server.level= level
         self.server.flag_p_size= flag_p_size
+        self.server.flag_Continuity=flag_Continuity
         self.server.QoSlevel= QoSlevel
         self.server.packet_size=packet_size
         if QoSlevel>10:
@@ -65,6 +73,10 @@ class UDPHandler(socketserver.BaseRequestHandler):
             self.server.packet_size=2
             self.server.flag_p_size= True
         if flag_Termination:
+            command="screen -S screenDecodec -X at '#' stuff S^M"
+            command2= 'ssh hpcn@192.168.1.102 "%s"'%command
+
+            os.system(command2)
             self.server.QoSlevel=0
             QoSlevel= 0
             self.server.level=0
@@ -74,8 +86,8 @@ class UDPHandler(socketserver.BaseRequestHandler):
             width= 0
             fps= 0
             rs= 0
-            clr=0
-        print("Imprimir:",height,width,fps,rs,clr,self.server.QoSlevel)
+            clr=0          
+        #print("Imprimir:",height,width,fps,rs,clr,self.server.QoSlevel)
         """
         with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
             text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,height,width,fps,rs,clr,self.server.QoSlevel))
@@ -86,7 +98,7 @@ class UDPHandler(socketserver.BaseRequestHandler):
 
 
 
-def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_size,QoSlevel, packet_size):
+def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_size,QoSlevel, packet_size,flag_Continuity):
     """ From the network Q4S parameters generats the coder options."""
     #pylint: disable=unused-argument
     pl_flag=False
@@ -96,52 +108,60 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
     with open("../Q4S_client-server/q4sServer/ejemplo.txt", "r") as text_file:
             BW_up = text_file.readline()
             BW_down = text_file.readline()
+            pck_size_RTP= text_file.readline()
             text_file.close()
     fps=0
     clr=0
     rs= 0
     dim_packet= [1,320],[1,640],[6,160],[8,128]
+    packet_RTP= 750, 980, 1240, 1400
 
     """""""""""""""""""""""""""""""""""""""""
     AQUI HAY QUE PONER UMBRALES REALES
     """""""""""""""""""""""""""""""""""""""""
     print ("Jitter calculate_parameters:", jitter)
-    if packetloss > 5:
-        pl_flag=True
-        if packet_size==0:
-            flag_p_size=False
-    if latency>5.5:
-        if packet_size==3:
-            flag_p_size=False
-        lt_flag=True
-    if bandwidth < float(BW_up):
-        BW_flag=True
-    if jitter > 1.1:
-        jt_flag=True
-    if lt_flag & (not pl_flag) & flag_p_size:
+    if flag_Continuity==False:
+        if packetloss > 10:
+            pl_flag=True
+            if packet_size==0:
+                flag_p_size=False
+        if latency>10:
+            if packet_size==3:
+                flag_p_size=False
+            lt_flag=True
+        if bandwidth < float(BW_up):
+            BW_flag=True
+        if jitter > 4:
+            jt_flag=True
+        if lt_flag & (not pl_flag) & flag_p_size:
         
-        packet_size+=1
-        #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
+            packet_size+=1
+            #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
         #os.system(command)
-        flag_p_size=False
-    elif pl_flag & flag_p_size & (not lt_flag):
-        packet_size-=1
+            flag_p_size=False
+        elif pl_flag & flag_p_size & (not lt_flag):
+            packet_size-=1
         
-        #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
+            #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
         #os.system(command)
-        flag_p_size=False
-    elif BW_flag | (pl_flag&lt_flag) | (lt_flag & (not pl_flag) & (not flag_p_size))| (pl_flag & (not lt_flag) & (not flag_p_size)):
-        level+=1
-        flag_p_size=True
-    elif (not BW_flag) & (not pl_flag)& (not lt_flag)& (not jt_flag):
-        level-=1
-        flag_p_size=True
-    if (not BW_flag) & (not pl_flag) & (not lt_flag)& (not jt_flag):
-        QoSlevel-=1
-    else:
-        QoSlevel+=1
+            flag_p_size=False
+        elif BW_flag | (pl_flag&lt_flag) | (lt_flag & (not pl_flag) & (not flag_p_size))| (pl_flag & (not lt_flag) & (not flag_p_size)):
+            level+=1
+            flag_p_size=True
+        elif (not BW_flag) & (not pl_flag)& (not lt_flag)& (not jt_flag):
+            level-=1
+            flag_p_size=True
+        if (not BW_flag) & (not pl_flag) & (not lt_flag)& (not jt_flag):
+            QoSlevel-=1
+        else:
+            QoSlevel+=1
+    #print("QoS level=", QoSlevel)
+    with open("../Q4S_client-server/q4sServer/ejemplo.txt","w") as text_file:
+        print("PARAMETROS ESCRITURA",BW_up,",",BW_down,",",packet_RTP[packet_size])
+        text_file.write("%f\n%f\n%d\n"%(float(BW_up),float(BW_down),packet_RTP[packet_size]))
 
-    
+        text_file.close()
+
     if level<=0: 
         fps=2
         clr=1
@@ -194,7 +214,7 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
     #        text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr,QoSlevel))
     headers = {"Content-type": "","Accept": "text/plain"}
 
-    conn = http.client.HTTPConnection('192.168.1.104',5050)
+    conn = http.client.HTTPConnection('192.168.1.105',5050)
     conn.request("POST","",params, headers)
     res = conn.getresponse()
 
@@ -209,9 +229,12 @@ def parse_metrics(text):
     bandwidth = 100000
     packetloss = float('nan')
     flag_Termination=False
+    flag_Continuity=False
     text = text.split()
     if text[1]=="Termination":
         flag_Termination=True
+    if text[1]=="Continuity": 
+        flag_Continuity=True
     print (text)
     for index, word in enumerate(text[:-1]):
         if word == "Latency:":
@@ -235,7 +258,7 @@ def parse_metrics(text):
                 bandwidth = float(text[index+1])
             except ValueError:
                 bandwidth = float('nan')
-    return latency, jitter, bandwidth, packetloss, flag_Termination
+    return latency, jitter, bandwidth, packetloss, flag_Termination, flag_Continuity
 
 
 def parse_arguments(argv):

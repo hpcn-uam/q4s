@@ -263,6 +263,8 @@ bool Q4SClientProtocol::negotiation(Q4SSDPParams params, Q4SMeasurementResult &r
     qosLevelMax= qosLevel; 
     if (!measureOk)
     {
+        usleep(params.alertPause*1000);
+
         ok = false;  
     }
     return ok;

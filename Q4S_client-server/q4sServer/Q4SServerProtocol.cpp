@@ -300,6 +300,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
                 alertMessage.append(" BandWidth: " + std::to_string((long double)results.values.bandwidth));
                 //Alert
                 Q4SServerProtocol::alert(alertMessage);
+                usleep(params.alertPause*1000);
             }           
         }
         else 
@@ -318,7 +319,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
             //fclose(pFile); 
         #endif
         #if PLOT_INFO
-            sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,BW_up=%.3f,BW_down=%.3f,loss_up=%.3f,loss_down=%.3f,'",upResults.values.latency,results.values.latency, upResults.values.jitter, results.values.jitter,upResults.values.bandwidth, results.values.bandwidth,upResults.values.packetLoss, results.values.packetLoss);
+            sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,BW_up=%.3f,BW_down=%.3f,loss_up=%.3f,loss_down=%.3f'",upResults.values.latency,results.values.latency, upResults.values.jitter, results.values.jitter,upResults.values.bandwidth, results.values.bandwidth,upResults.values.packetLoss, results.values.packetLoss);
             system(command_curl);        
         #endif
     }
@@ -382,7 +383,7 @@ void Q4SServerProtocol::continuity(Q4SSDPParams params)
         //fclose(pFile); 
     #endif
     #if PLOT_INFO
-        sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,loss_up=%.3f,loss_down=%.3f,'",upResults.values.latency,results.values.latency, upResults.values.jitter, results.values.jitter,upResults.values.packetLoss, results.values.packetLoss);
+        sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,loss_up=%.3f,loss_down=%.3f'",upResults.values.latency,results.values.latency, upResults.values.jitter, results.values.jitter,upResults.values.packetLoss, results.values.packetLoss);
         system(command_curl);        
     #endif
     }

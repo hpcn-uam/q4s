@@ -13,11 +13,7 @@ PORT = 5050
 
 class http_server:
     def __init__(self):
-        BW_up= 27000
-        BW_down=27000
-        with open("../Q4S_client-server/q4sServer/ejemplo.txt", "w") as text_file:
-            text_file.write("%d\n%d"%(BW_up, BW_down))
-            text_file.close()
+
         server = HTTPServer(('', PORT), myHandler)
         server.serve_forever()
 
@@ -90,9 +86,13 @@ class myHandler(BaseHTTPRequestHandler):
             elif clr[0]==1:
                 BW_up=20000
                 BW_down=20000  
-
+        with open("../Q4S_client-server/q4sServer/ejemplo.txt", "r") as text_file: 
+            BW_aux=text_file.readline()
+            BW_aux=text_file.readline()
+            packet_size=text_file.readline()
+            text_file.close()
         with open("../Q4S_client-server/q4sServer/ejemplo.txt", "w") as text_file:
-            text_file.write("%d\n%d"%(BW_up, BW_down))
+            text_file.write("%d\n%d\n%d"%(int(BW_up), int(BW_down),int(packet_size)))
             text_file.close()
 
 class main:

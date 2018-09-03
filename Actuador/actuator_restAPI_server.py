@@ -18,13 +18,14 @@ def main():
     print 'HELLO'
     try:
 
-        #with open("../test/measured/dynamic_actuator.txt", "w") as text_file:
-        #    ts= time.time()
-        #   text_file.write("%f,0,0,0,0,0,0\n"%ts)
+        with open("../test/measured/dynamic_actuator.txt", "w") as text_file:
+            ts= time.time()
+            text_file.write("%f,0,0,0,0,0,0\n"%(ts))
         server = SocketServer.UDPServer(('', port_number), UDPHandler)
         connHTTP = httplib.HTTPConnection("192.168.1.102:5050")
         server.level= 0
         server.flag_p_size= True
+        server.flag_Continuity=False
         server.QoSlevel= 0
         server.packet_size=2
         server.coder_direction = (coder_ip, coder_port)
@@ -41,9 +42,9 @@ class UDPHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         flag_Termination= False
-        flag_Continuity= False
+        flag_Continuity= self.server.flag_Continuity
         level = self.server.level
-        flag_p_size= self.server.flag_p_size
+        flag_p_size=self.server.flag_p_size
         packet_size=self.server.packet_size
         QoSlevel = self.server.QoSlevel
         data = self.request[0].strip()
@@ -54,6 +55,7 @@ class UDPHandler(SocketServer.BaseRequestHandler):
         flag_p_size, level, QoSlevel,packet_size,ts,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, level, flag_p_size, QoSlevel, packet_size,flag_Termination,flag_Continuity)
         self.server.level= level
         self.server.flag_p_size= flag_p_size
+        self.server.flag_Continuity=flag_Continuity
         self.server.QoSlevel= QoSlevel
         self.server.packet_size=packet_size
         if QoSlevel>10:
@@ -69,6 +71,7 @@ class UDPHandler(SocketServer.BaseRequestHandler):
         if flag_Termination:
             self.server.QoSlevel=0
             QoSlevel= 0
+            print "FLAG TERMINATION"
             self.server.level=0
             self.server.packet_size=2
             self.server.flag_p_size=True
@@ -78,12 +81,12 @@ class UDPHandler(SocketServer.BaseRequestHandler):
             rs= 0
             clr=0
         print "Imprimir:",height,width,fps,rs,clr,self.server.QoSlevel
-        """
+        
         with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
             text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,height,width,fps,rs,clr,self.server.QoSlevel))
         print "Imprimir:",height,width,fps,rs,clr,self.server.QoSlevel
         #print latency, jitter, bandwidth, packetloss
-        """      
+           
         return
 
 
@@ -98,12 +101,13 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
     with open("../Q4S_client-server/q4sServer/ejemplo.txt", "r") as text_file:
             BW_up = text_file.readline()
             BW_down = text_file.readline()
+            pck_size_RTP= text_file.readline()
             text_file.close()
     fps=0
     clr=0
     rs= 0
-    st=0
     dim_packet= [1,320],[1,640],[6,160],[8,128]
+    packet_RTP= 750, 980, 1240, 1400
 
     """""""""""""""""""""""""""""""""""""""""
     AQUI HAY QUE PONER UMBRALES REALES
@@ -144,11 +148,19 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
     elif (not BW_flag) & (not pl_flag)& (not lt_flag)& (not jt_flag):
         level-=1
         flag_p_size=True
-    if (not BW_flag) & (not pl_flag) & (not lt_flag)& (not jt_flag):
-        QoSlevel-=1
-    else:
-        QoSlevel+=1
 
+    print "NIVEL QoS ACTUADOR inicio",QoSlevel
+    if not flag_Continuity:
+        if (not BW_flag) & (not pl_flag) & (not lt_flag)& (not jt_flag):
+            QoSlevel-=1
+        else:
+            QoSlevel+=1
+
+    with open("../Q4S_client-server/q4sServer/ejemplo.txt","w") as text_file:
+        print("PARAMETROS ESCRITURA",BW_up,",",BW_down,",",packet_RTP[packet_size])
+        text_file.write("%f\n%f\n%d\n"%(float(BW_up),float(BW_down),packet_RTP[packet_size]))
+
+        text_file.close()
     
     if level<=0: 
         fps=2
@@ -196,16 +208,18 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
         fps=12
         clr=0
         rs= 1
-    params = urllib.urlencode({'st':st, 'fps': fps, 'clr': clr, 'rs': rs, 'wp':dim_packet[packet_size][1] ,'hp':dim_packet[packet_size][0]}) 
+    params =urllib.urlencode({'fps': fps, 'clr': clr, 'rs': rs, 'wp':dim_packet[packet_size][1] ,'hp':dim_packet[packet_size][0]})
     ts= time.time()
-    #with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
-    #        text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr,QoSlevel))
+    with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
+            text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr,QoSlevel))
+            text_file.close()
     headers = {"Content-type": "","Accept": "text/plain"}
 
     conn = httplib.HTTPConnection('192.168.1.102',5050)
     conn.request("POST","",params, headers)
     res = conn.getresponse()
-
+    print "NIVEL QoS ACTUADOR final",QoSlevel
+    
     return flag_p_size, level, QoSlevel, packet_size,ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr
 
 
@@ -222,7 +236,7 @@ def parse_metrics(text):
     if text[1]=="Termination":
         flag_Termination=True
     if text[1]=="Continuity":
-        flag_Termination=True
+        flag_Continuity=True
     print text
     for index, word in enumerate(text[:-1]):
         if word == "Latency:":
