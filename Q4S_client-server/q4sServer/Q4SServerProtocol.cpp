@@ -300,7 +300,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
                 alertMessage.append(" BandWidth: " + std::to_string((long double)results.values.bandwidth));
                 //Alert
                 Q4SServerProtocol::alert(alertMessage);
-                usleep(params.alertPause*1000);
+                
             }           
         }
         else 
@@ -313,15 +313,19 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
             struct timeval time_s;   
             std::ofstream pFile("../../test/measured/measure_server.txt", ios::out | ios::app);;         
             int time_error = gettimeofday(&time_s, NULL); 
-            uint64_t actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
+            uint64_t actualTime =  (time_s.tv_sec*1000 + time_s.tv_usec/1000);
             sprintf(data2save, "0\t%"PRIu64"\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%d\n",actualTime,results.values.latency,upResults.values.latency, results.values.jitter, upResults.values.jitter,results.values.bandwidth, upResults.values.bandwidth,results.values.packetLoss, upResults.values.packetLoss,qosLevel, measureOk); 
             pFile<<data2save;
             //fclose(pFile); 
         #endif
         #if PLOT_INFO
-            sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,BW_up=%.3f,BW_down=%.3f,loss_up=%.3f,loss_down=%.3f'",upResults.values.latency,results.values.latency, upResults.values.jitter, results.values.jitter,upResults.values.bandwidth, results.values.bandwidth,upResults.values.packetLoss, results.values.packetLoss);
+            sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_server latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,BW_up=%.3f,BW_down=%.3f,loss_up=%.3f,loss_down=%.3f'",upResults.values.latency,results.values.latency, upResults.values.jitter, results.values.jitter,upResults.values.bandwidth, results.values.bandwidth,upResults.values.packetLoss, results.values.packetLoss);
             system(command_curl);        
         #endif
+        if(!measureOk && ok)
+        {
+            usleep(params.alertPause*1000);
+        }
     }
         qosLevelMax= qosLevel; 
           
@@ -383,7 +387,7 @@ void Q4SServerProtocol::continuity(Q4SSDPParams params)
         //fclose(pFile); 
     #endif
     #if PLOT_INFO
-        sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,loss_up=%.3f,loss_down=%.3f'",upResults.values.latency,results.values.latency, upResults.values.jitter, results.values.jitter,upResults.values.packetLoss, results.values.packetLoss);
+        sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_server latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,loss_up=%.3f,loss_down=%.3f'",upResults.values.latency,results.values.latency, upResults.values.jitter, results.values.jitter,upResults.values.packetLoss, results.values.packetLoss);
         system(command_curl);        
     #endif
     }
