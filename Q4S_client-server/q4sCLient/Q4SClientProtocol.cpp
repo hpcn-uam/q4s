@@ -253,7 +253,7 @@ bool Q4SClientProtocol::negotiation(Q4SSDPParams params, Q4SMeasurementResult &r
         pFile<<data2save;
     #endif
     #if PLOT_INFO
-        sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,BW_up=%.3f,BW_down=%.3f,loss_up=%.3f,loss_down=%.3f,'",results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.bandwidth, downResults.values.bandwidth,results.values.packetLoss, downResults.values.packetLoss);
+        sprintf(command_curl, "curl -i -XPOST 'http://192.168.1.102:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,BW_up=%.3f,BW_down=%.3f,loss_up=%.3f,loss_down=%.3f'",results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.bandwidth, downResults.values.bandwidth,results.values.packetLoss, downResults.values.packetLoss);
         system(command_curl);
         
     #endif
@@ -338,7 +338,7 @@ void Q4SClientProtocol::continuity(Q4SSDPParams params)
         //fclose(pFile); 
     #endif
     #if PLOT_INFO
-        sprintf(command_curl, "curl -i -XPOST 'http://localhost:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3floss_up=%.3f,loss_down=%.3f,'",results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.packetLoss, downResults.values.packetLoss);
+        sprintf(command_curl, "curl -i -XPOST 'http://192.168.1.102:8086/write?db=racing_drones&precision=ms' --data-binary 'q4s_client latency_up=%.3f,latency_down=%.3f,jitter_up=%.3f,jitter_down=%.3f,loss_up=%.3f,loss_down=%.3f'",results.values.latency,downResults.values.latency, results.values.jitter, downResults.values.jitter,results.values.packetLoss, downResults.values.packetLoss);
         system(command_curl);
         
     #endif
