@@ -232,8 +232,8 @@ bool Q4SClientProtocol::negotiation(Q4SSDPParams params, Q4SMeasurementResult &r
             measureOk = Q4SClientProtocol::measureStage0(params, results, downResults, params.procedure.windowSizeLatencyCalcDownlink);
             if (measureOk)
             {
-                ok &= Q4SClientProtocol::ready(1,params);
-                if (ok)
+                ok &= Q4SClientProtocol::ready(q4SClientConfigFile.ready_BW,params);
+                if (ok && q4SClientConfigFile.ready_BW==1)
                 {
                     measureOk = Q4SClientProtocol::measureStage1(params, results, downResults);
                 }
@@ -318,14 +318,14 @@ void Q4SClientProtocol::continuity(Q4SSDPParams params)
             }
             if (!stop)
             {
-                alert(); 
+                alert(params); 
             }
             showCheckMessage(results, downResults);
     
         }
         else
         {
-            recovery(); 
+            recovery(params); 
         }
     #if SAVE_INFO
         struct timeval time_s;
@@ -346,7 +346,7 @@ void Q4SClientProtocol::continuity(Q4SSDPParams params)
     }
 }
 
-void Q4SClientProtocol::recovery()
+void Q4SClientProtocol::recovery(Q4SSDPParams params)
 {
     if (qosLevel ==  qosLevelMax)
     {
@@ -365,7 +365,7 @@ void Q4SClientProtocol::recovery()
             
        
        uint64_t timeForRecovery = actualTime - recoveryTimeStamp;
-       if ( timeForRecovery > q4SClientConfigFile.recoveryPause)
+       if ( timeForRecovery > params.recoveryPause)
        {
            qosLevel--;
 
@@ -376,14 +376,14 @@ void Q4SClientProtocol::recovery()
     }
 }
 
-void Q4SClientProtocol::alert()
+void Q4SClientProtocol::alert(Q4SSDPParams params)
 {   
     struct timeval time_s;
     int time_error = gettimeofday(&time_s, NULL); 
 
     uint64_t actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
     uint64_t timeFromLastAlert = actualTime - lastAlertTimeStamp;
-    if ( timeFromLastAlert > q4SClientConfigFile.alertPause)
+    if ( timeFromLastAlert > params.alertPause)
     {
         qosLevel++;
         lastAlertTimeStamp = actualTime;

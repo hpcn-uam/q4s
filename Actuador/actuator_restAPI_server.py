@@ -18,9 +18,9 @@ def main():
     print 'HELLO'
     try:
 
-        with open("../test/measured/dynamic_actuator.txt", "w") as text_file:
-            ts= time.time()
-            text_file.write("%f,0,0,0,0,0,0\n"%(ts))
+        #with open("../test/measured/dynamic_actuator.txt", "w") as text_file:
+        #    ts= time.time()
+        #    text_file.write("%f,0,0,0,0,0,0\n"%(ts))
         server = SocketServer.UDPServer(('', port_number), UDPHandler)
         connHTTP = httplib.HTTPConnection("192.168.1.102:5050")
         server.level= 0
@@ -115,42 +115,44 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
     if flag_Termination:
         os.system("screen -S screenDecodec -X at '#' stuff S^M")
     elif flag_Continuity:
-        os.system('screen -S screenDecodec -d -m ./LHEPacketizer.out -rc 192.168.1.104 --pipe /home/hpcn/Repos/Packetization-LHE/dummy')
-
-    print "Jitter calculate_parameters:", jitter
-    if packetloss > 5:
-        pl_flag=True
-        if packet_size==0:
+        print "Continuity on"
+        os.system('cd ../../Packetization-LHE; screen -S screenDecodec -d -m ./LHEPacketizer.out -rc 192.168.1.101 --pipe /home/hpcn/Repos/Packetization-LHE/dummy')
+        time.sleep(1)
+    
+    else:
+        if packetloss > 5:
+            pl_flag=True
+            if packet_size==0:
+                flag_p_size=False
+        if latency>5.5:
+            if packet_size==3:
+                flag_p_size=False
+            lt_flag=True
+        if bandwidth < float(BW_up):
+            BW_flag=True
+        if jitter > 1.1:
+            jt_flag=True
+        if lt_flag & (not pl_flag) & flag_p_size:
+            
+            packet_size+=1
+            #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
+            #os.system(command)
             flag_p_size=False
-    if latency>5.5:
-        if packet_size==3:
+        elif pl_flag & flag_p_size & (not lt_flag):
+            packet_size-=1
+            
+            #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
+            #os.system(command)
             flag_p_size=False
-        lt_flag=True
-    if bandwidth < float(BW_up):
-        BW_flag=True
-    if jitter > 1.1:
-        jt_flag=True
-    if lt_flag & (not pl_flag) & flag_p_size:
-        
-        packet_size+=1
-        #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
-        #os.system(command)
-        flag_p_size=False
-    elif pl_flag & flag_p_size & (not lt_flag):
-        packet_size-=1
-        
-        #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
-        #os.system(command)
-        flag_p_size=False
-    elif BW_flag | (pl_flag&lt_flag) | (lt_flag & (not pl_flag) & (not flag_p_size))| (pl_flag & (not lt_flag) & (not flag_p_size)):
-        level+=1
-        flag_p_size=True
-    elif (not BW_flag) & (not pl_flag)& (not lt_flag)& (not jt_flag):
-        level-=1
-        flag_p_size=True
+        elif BW_flag | (pl_flag&lt_flag) | (lt_flag & (not pl_flag) & (not flag_p_size))| (pl_flag & (not lt_flag) & (not flag_p_size)):
+            level+=1
+            flag_p_size=True
+        elif (not BW_flag) & (not pl_flag)& (not lt_flag)& (not jt_flag):
+            level-=1
+            flag_p_size=True
 
-    print "NIVEL QoS ACTUADOR inicio",QoSlevel
-    if not flag_Continuity:
+        print "NIVEL QoS ACTUADOR inicio",QoSlevel
+
         if (not BW_flag) & (not pl_flag) & (not lt_flag)& (not jt_flag):
             QoSlevel-=1
         else:

@@ -21,8 +21,8 @@ public:
     bool    ready(unsigned long stage,Q4SSDPParams &params);
     // Q4S Phases
     bool    handshake(Q4SSDPParams &params);
-    void    alert();
-    void    recovery();
+    void    alert(Q4SSDPParams params);
+    void    recovery(Q4SSDPParams params);
     bool    negotiation(Q4SSDPParams params, Q4SMeasurementResult &results);
     void    continuity(Q4SSDPParams params);
     void    cancel();

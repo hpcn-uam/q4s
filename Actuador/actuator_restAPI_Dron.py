@@ -151,10 +151,12 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
         elif (not BW_flag) & (not pl_flag)& (not lt_flag)& (not jt_flag):
             level-=1
             flag_p_size=True
+
         if (not BW_flag) & (not pl_flag) & (not lt_flag)& (not jt_flag):
             QoSlevel-=1
         else:
             QoSlevel+=1
+
     #print("QoS level=", QoSlevel)
     with open("../Q4S_client-server/q4sServer/ejemplo.txt","w") as text_file:
         print("PARAMETROS ESCRITURA",BW_up,",",BW_down,",",packet_RTP[packet_size])

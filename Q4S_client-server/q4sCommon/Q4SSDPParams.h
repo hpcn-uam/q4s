@@ -44,6 +44,7 @@ struct Q4SSDPParams
     float jitterDown;
     unsigned long bandWidthUp;
     unsigned long bandWidthDown;
+    unsigned long ready_BW; 
     float packetLossUp;
     float packetLossDown;
 	Q4SSDPProcedure procedure;

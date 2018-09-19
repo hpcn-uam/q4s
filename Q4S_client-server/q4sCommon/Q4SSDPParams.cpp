@@ -31,6 +31,7 @@ bool Q4SSDPParams::operator ==(const Q4SSDPParams p) const
 	equal &= (this->bandWidthDown == p.bandWidthDown);
 	equal &= (this->packetLossUp == p.packetLossUp);
 	equal &= (this->packetLossDown == p.packetLossDown);
+	equal &= (this->ready_BW == p.ready_BW);
 	equal &= (this->procedure == p.procedure);
 	
 	return equal;

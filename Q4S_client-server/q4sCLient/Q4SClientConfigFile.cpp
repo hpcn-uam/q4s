@@ -14,9 +14,11 @@ Q4SClientConfigFile::Q4SClientConfigFile(const std::string &fName)
     showMeasureInfo = configFile.keyExists("SHOW_MEASURE_INFO");
     alertPause = configFile.getValueOfKey<unsigned long>("ALERT_PAUSE", 2000);
     recoveryPause = configFile.getValueOfKey<unsigned long>("RECOVERY_PAUSE", 4000);
+    ready_BW = configFile.getValueOfKey<unsigned long>("READY_BW", 1);
     showReceivedPingInfo = configFile.keyExists("SHOW_RECEIVED_PING_INFO");
     showSocketReceivedInfo = configFile.keyExists("SHOW_SOCKET_RECEIVED_INFO");
     serverConnectionRetryTimes = configFile.getValueOfKey<unsigned long>("CONNECTION_RETRY_TIMES", 20);
     serverConnectionMilisecondsBetweenTimes = configFile.getValueOfKey<unsigned long>("TIME_BETWEEN_RETRYS", 1);
     waitForLaunchGANY = configFile.keyExists("WAIT_FOR_LAUNCH_GANY");
+
 }

@@ -16,6 +16,7 @@ public:
     unsigned long recoveryPause;
     unsigned long timeStartCalc;
     unsigned long timeEndApp;
+    unsigned long ready_BW; 
     bool showMeasureInfo;
     bool showReceivedPingInfo;
     bool showSocketReceivedInfo;

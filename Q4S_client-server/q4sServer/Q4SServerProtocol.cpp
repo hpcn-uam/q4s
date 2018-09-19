@@ -281,7 +281,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
             if (measureOk && ok)
             {
                ok &= Q4SServerProtocol::ready(params);
-               if (ok)
+               if (ok && params.ready_BW==1)
                {
                     measureOk = Q4SServerProtocol::measureStage1(params, results, upResults);
                }
@@ -430,6 +430,12 @@ bool Q4SServerProtocol::ready(Q4SSDPParams &params)
                 {
                    ok = false;
                 }
+                else 
+                {
+                     params.ready_BW=std::stol(message.substr(message.rfind(":")+1, message.rfind(":")+2));
+
+                }    
+
             }
         }
     time_error = gettimeofday(&time_s, NULL); 
