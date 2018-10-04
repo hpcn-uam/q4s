@@ -221,9 +221,7 @@ bool Q4SClientProtocol::negotiation(Q4SSDPParams params, Q4SMeasurementResult &r
     int pck_size; 
     for( QOS_negotiation = 0; (measureOk  == false ) && ( QOS_negotiation!= 11 ); QOS_negotiation++ )
     {
-        std::ifstream BWFile("packet_size.txt", ios::in | ios::app);
-        BWFile >>pck_size;
-        params.size_packet = pck_size;
+
         ok &= Q4SClientProtocol::ready(0, params);
         if( ok )
         {

@@ -22,7 +22,10 @@ def main():
         #    ts= time.time()
         #    text_file.write("%f,0,0,0,0,0,0\n"%(ts))
         server = SocketServer.UDPServer(('', port_number), UDPHandler)
-        connHTTP = httplib.HTTPConnection("192.168.1.102:5050")
+        server.HTTP_ip="192.168.1.105"
+        connHTTPchar="%s:5050"%server.HTTP_ip
+        connHTTP = httplib.HTTPConnection(connHTTPchar)
+        
         server.level= 0
         server.flag_p_size= True
         server.flag_Continuity=False
@@ -42,6 +45,7 @@ class UDPHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         flag_Termination= False
+        dim_packet= [1,320],[1,640],[6,160],[8,128]
         flag_Continuity= self.server.flag_Continuity
         level = self.server.level
         flag_p_size=self.server.flag_p_size
@@ -52,12 +56,18 @@ class UDPHandler(SocketServer.BaseRequestHandler):
         coder_ip = self.server.coder_direction[0]
         coder_port = self.server.coder_direction[1]
         latency, jitter, bandwidth, packetloss, flag_Termination, flag_Continuity = parse_metrics(data)
-        flag_p_size, level, QoSlevel,packet_size,ts,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, level, flag_p_size, QoSlevel, packet_size,flag_Termination,flag_Continuity)
+        flag_p_size, level, QoSlevel,packet_size,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, level, flag_p_size, QoSlevel, packet_size,flag_Termination,flag_Continuity)
         self.server.level= level
         self.server.flag_p_size= flag_p_size
         self.server.flag_Continuity=flag_Continuity
         self.server.QoSlevel= QoSlevel
         self.server.packet_size=packet_size
+        params =urllib.urlencode({'fps': fps, 'clr': clr, 'rs': rs, 'wp':width ,'hp':height})
+        headers = {"Content-type": "","Accept": "text/plain"}
+        conn = httplib.HTTPConnection(self.server.HTTP_ip,5050)
+        conn.request("POST","",params, headers)
+        res = conn.getresponse()
+
         if QoSlevel>10:
             self.server.QoSlevel=0
             self.server.level=0
@@ -71,7 +81,6 @@ class UDPHandler(SocketServer.BaseRequestHandler):
         if flag_Termination:
             self.server.QoSlevel=0
             QoSlevel= 0
-            print "FLAG TERMINATION"
             self.server.level=0
             self.server.packet_size=2
             self.server.flag_p_size=True
@@ -80,13 +89,15 @@ class UDPHandler(SocketServer.BaseRequestHandler):
             fps= 0
             rs= 0
             clr=0
-        print "Imprimir:",height,width,fps,rs,clr,self.server.QoSlevel
-        
-        with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
-            text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,height,width,fps,rs,clr,self.server.QoSlevel))
-        print "Imprimir:",height,width,fps,rs,clr,self.server.QoSlevel
+        if fps>0:
+            fps_curl= 110/int(fps) 
+            command_curl= "curl -i -XPOST 'http://%s:8086/write?db=racing_drones&precision=ms' --data-binary 'actuator_Server QoS_level=%d,fps=%d,clr=%d,heigth=%d,width=%d'"%(self.server.client_ip,QoSlevel,fps_curl,int(clr),int(height), int(width))
+            os.system(command_curl)
+        #with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
+        #    text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,height,width,fps,rs,clr,self.server.QoSlevel))
+        #print "Imprimir:",height,width,fps,rs,clr,self.server.QoSlevel
         #print latency, jitter, bandwidth, packetloss
-           
+          
         return
 
 
@@ -98,10 +109,19 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
     lt_flag=False
     BW_flag=False
     jt_flag=False 
-    with open("../Q4S_client-server/q4sServer/ejemplo.txt", "r") as text_file:
-            BW_up = text_file.readline()
-            BW_down = text_file.readline()
-            pck_size_RTP= text_file.readline()
+    with open("../Q4S_client-server/q4sServer/dynamic_params.txt", "r") as text_file:
+            aux = text_file.readline()
+            BW_up=aux[6:-1]
+            aux = text_file.readline()
+            BW_down=aux[8:-1]
+            aux = text_file.readline()
+            latency_app=aux[8:-1]
+            aux = text_file.readline()
+            jitter_up_app=aux[10:-1]
+            aux = text_file.readline()
+            jitter_down_app=aux[12:-1]
+            aux = text_file.readline()         
+            pck_size_RTP= aux[14:-1]
             text_file.close()
     fps=0
     clr=0
@@ -120,49 +140,43 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
         time.sleep(1)
     
     else:
-        if packetloss > 5:
+        if latency>float(latency_app):
+            lt_flag=True
+            if packet_size==3:
+                flag_p_size=False
+
+        elif packetloss > 30:
             pl_flag=True
             if packet_size==0:
                 flag_p_size=False
-        if latency>5.5:
+        elif bandwidth < float(BW_up):
             if packet_size==3:
                 flag_p_size=False
-            lt_flag=True
-        if bandwidth < float(BW_up):
             BW_flag=True
-        if jitter > 1.1:
+        elif jitter > float(jitter_up_app):
             jt_flag=True
-        if lt_flag & (not pl_flag) & flag_p_size:
+        if (jt_flag | pl_flag) & flag_p_size:
             
-            packet_size+=1
-            #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
-            #os.system(command)
-            flag_p_size=False
-        elif pl_flag & flag_p_size & (not lt_flag):
             packet_size-=1
+            #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
+            #os.system(command)
+        elif (BW_flag | lt_flag) & flag_p_size:
+            packet_size+=1
+        
             
             #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
             #os.system(command)
             flag_p_size=False
-        elif BW_flag | (pl_flag&lt_flag) | (lt_flag & (not pl_flag) & (not flag_p_size))| (pl_flag & (not lt_flag) & (not flag_p_size)):
+        if (not flag_p_size) & ((BW_flag)|(pl_flag)|(lt_flag)|(jt_flag)):
             level+=1
             flag_p_size=True
-        elif (not BW_flag) & (not pl_flag)& (not lt_flag)& (not jt_flag):
+        if (not BW_flag) & (not pl_flag)& (not lt_flag)& (not jt_flag):
+            QoSlevel-=1
             level-=1
             flag_p_size=True
-
-        print "NIVEL QoS ACTUADOR inicio",QoSlevel
-
-        if (not BW_flag) & (not pl_flag) & (not lt_flag)& (not jt_flag):
-            QoSlevel-=1
-        else:
+        else: 
             QoSlevel+=1
 
-    with open("../Q4S_client-server/q4sServer/ejemplo.txt","w") as text_file:
-        print("PARAMETROS ESCRITURA",BW_up,",",BW_down,",",packet_RTP[packet_size])
-        text_file.write("%f\n%f\n%d\n"%(float(BW_up),float(BW_down),packet_RTP[packet_size]))
-
-        text_file.close()
     
     if level<=0: 
         fps=2
@@ -210,19 +224,9 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
         fps=12
         clr=0
         rs= 1
-    params =urllib.urlencode({'fps': fps, 'clr': clr, 'rs': rs, 'wp':dim_packet[packet_size][1] ,'hp':dim_packet[packet_size][0]})
-    ts= time.time()
-    with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
-            text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr,QoSlevel))
-            text_file.close()
-    headers = {"Content-type": "","Accept": "text/plain"}
 
-    conn = httplib.HTTPConnection('192.168.1.102',5050)
-    conn.request("POST","",params, headers)
-    res = conn.getresponse()
-    print "NIVEL QoS ACTUADOR final",QoSlevel
     
-    return flag_p_size, level, QoSlevel, packet_size,ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr
+    return flag_p_size, level, QoSlevel, packet_size,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr
 
 
 def parse_metrics(text):

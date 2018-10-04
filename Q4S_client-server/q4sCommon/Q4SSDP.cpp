@@ -302,6 +302,24 @@ bool Q4SSDP_parseLatency(std::string message, float& latency)
     return ok;
 }
 
+bool Q4SSDP_parsePacketSize(std::string message,int& packet_length)
+{
+    bool ok = true;
+
+    std::string pattern ="a=packet-length:";
+    std::string paramText;
+
+    ok &= Q4SSDP_parseOneElementLine (message, pattern, paramText); 
+
+    if (ok)
+    {
+        packet_length = std::stoi(paramText);
+    }
+    
+    return ok;
+}
+
+
 bool Q4SSDP_parseJitter(std::string message, float& up, float& down)
 {
     bool ok = true;
@@ -339,6 +357,7 @@ bool Q4SSDP_parseBandWidth(std::string message, unsigned long& up, unsigned long
 
     return ok;
 }
+
 
 bool Q4SSDP_parsePacketLoss(std::string message, float& up, float& down)
 {
@@ -463,7 +482,9 @@ std::string Q4SSDP_create(Q4SSDPParams params)
     message.append( makeBandWidthLine(params.bandWidthUp, params.bandWidthDown));
     message.append( makePacketLossLine(params.packetLossUp, params.packetLossDown));
     message.append( makeProcedureLine(params.procedure));
-    
+    message.append("a=packet-length:");
+    message.append(std::to_string(params.size_packet));   
+    message.append("\n");
     return message;
 }
 
@@ -480,6 +501,7 @@ bool Q4SSDP_parse(std::string message, Q4SSDPParams& params)
     ok &= Q4SSDP_parseBandWidth(message, params.bandWidthUp, params.bandWidthDown);
     ok &= Q4SSDP_parsePacketLoss(message, params.packetLossUp, params.packetLossDown);
     ok &= Q4SSDP_parseProcedure(message, params.procedure);
+    ok &= Q4SSDP_parsePacketSize(message, params.size_packet);
 
     return ok;
 }

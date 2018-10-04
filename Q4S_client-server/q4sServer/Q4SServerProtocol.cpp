@@ -235,15 +235,16 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
     return ok;
 }
 
- bool Q4SServerProtocol::negotiation(Q4SSDPParams &params, Q4SMeasurementResult &results) 
- {
+bool Q4SServerProtocol::negotiation(Q4SSDPParams &params, Q4SMeasurementResult &results) 
+{
     //printf("----------Negotiation Phase\n");
     bool ok = true;
     int QOS_negotiation;
     bool measureOk= false; 
     char data2save[200]={}; 
     char command_curl[300]={}; 
-
+    std::string line; 
+    unsigned long auxBW; 
     /*
     pthread_mutex_lock (&mut_flag);
     bool flagEoS_negotiation=flagEoS;
@@ -251,7 +252,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
     */
     Q4SMeasurementResult upResults;
     Q4SMeasurementResult resultAlert;
-    unsigned long auxBW;
+    
     int pck_size; 
     for( QOS_negotiation = 0; (measureOk  == false ) && ( QOS_negotiation!= 11 ) && (ok==true) ; QOS_negotiation++ )
     {
@@ -260,13 +261,28 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
         #endif 
         if (ok)
         { 
-            std::ifstream BWFile("ejemplo.txt", ios::in | ios::app);
-            BWFile >>auxBW;
-            params.bandWidthUp = auxBW;
-            BWFile >>auxBW;
-            params.bandWidthDown = auxBW;
-            BWFile >>pck_size;
-            params.size_packet = pck_size;
+            std::ifstream BWFile("dynamic_params.txt", ios::in | ios::app);
+            BWFile >>line;
+            params.bandWidthUp = std::stol(line.substr(line.find("=")+1));
+     
+            
+            BWFile >>line;
+            params.bandWidthDown = std::stol(line.substr(line.find("=")+1));
+            
+            BWFile >>line;
+            params.latency = std::stof(line.substr(line.find("=")+1));
+            
+
+            BWFile >>line;
+            params.jitterUp = std::stof(line.substr(line.find("=")+1));
+            
+            BWFile >>line;
+            params.jitterDown = std::stof(line.substr(line.find("=")+1));
+            
+            BWFile >>line;
+            params.size_packet = std::stoi(line.substr(line.find("=")+1));
+
+
             params.qosLevelUp = QOS_negotiation;
             params.qosLevelDown = QOS_negotiation;
   
@@ -290,14 +306,15 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
             if(!measureOk && ok)
             {
                 std::string alertMessage;
-                resultAlert.values.latency= std::max(results.values.latency,upResults.values.latency);
-                resultAlert.values.jitter= std::max(results.values.jitter,upResults.values.jitter);
-                resultAlert.values.packetLoss= std::max(results.values.packetLoss,upResults.values.packetLoss);
-                resultAlert.values.bandwidth= std::min(results.values.bandwidth,upResults.values.bandwidth);
+
                 alertMessage.append("Latency: " + std::to_string((long double)results.values.latency));
                 alertMessage.append(" Jitter: " + std::to_string((long double)results.values.jitter));
                 alertMessage.append(" PacketLoss: " + std::to_string((long double)results.values.packetLoss));
                 alertMessage.append(" BandWidth: " + std::to_string((long double)results.values.bandwidth));
+                alertMessage.append(" Latency up: " + std::to_string((long double)upResults.values.latency));
+                alertMessage.append(" Jitter up: " + std::to_string((long double)upResults.values.jitter));
+                alertMessage.append(" PacketLoss up: " + std::to_string((long double)upResults.values.packetLoss));
+                alertMessage.append(" BandWidth up: " + std::to_string((long double)upResults.values.bandwidth));
                 //Alert
                 Q4SServerProtocol::alert(alertMessage);
                 
@@ -332,7 +349,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
         ok&= !mReceivedMessagesTCP.readCancelMessage();
         ok &= measureOk; 
         return ok;
- }
+}
 void Q4SServerProtocol::continuity(Q4SSDPParams params)
 {
     //printf("----------Continuity Phase\n");

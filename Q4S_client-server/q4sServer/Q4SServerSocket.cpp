@@ -279,7 +279,8 @@ bool Q4SServerSocket::createAlertUdpSocket( )
     hints.ai_protocol = IPPROTO_UDP;
     hints.ai_flags = 0; 
     // Resolve the local address and port to be used by the server
-    iResult = getaddrinfo( NULL, q4SServerConfigFile.agentPort.c_str(), &hints, &mpAddrInfoResultAlert );
+    iResult = getaddrinfo( q4SServerConfigFile.agentIP.c_str(), q4SServerConfigFile.agentPort.c_str(), &hints, &mpAddrInfoResultAlert );
+    //iResult = getaddrinfo( NULL, q4SServerConfigFile.agentPort.c_str(), &hints, &mpAddrInfoResultAlert );
         
     if( ok && ( iResult != 0 ) )
     {
