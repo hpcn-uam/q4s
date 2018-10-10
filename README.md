@@ -23,3 +23,6 @@ Set the options for client and server sides in their respective configuration fi
 
 #### Option 2: 
 Set the options for client and server sides in their respective configuration files (i.e., ```q4s/Q4S_client-server/q4sCLient/Q4SClientConfig.txt``` and ```q4s/Q4S_client-server/q4sServer/Q4SServerConfig.txt```, respectively) and use the script ```execute_client.sh``` or ```execute_server.sh``` with the option "Run".
+
+### Observation:
+In the configuration for Q4S client, the option ```READY_BW``` allows enabling or disabling the measurements of bandwidth before Continuity (1 enabled, 2 disabled).
