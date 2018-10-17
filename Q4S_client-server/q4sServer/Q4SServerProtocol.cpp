@@ -1041,7 +1041,7 @@ void* Q4SServerProtocol::sendUDPBWFn(void* lpData )
     int ms_per_message[11]={};
     ms_per_message[0] = 1;
     int divisor;
-    char msn_BW[size_packet]={0}; 
+    char msn_BW[size_packet]; 
     for(int z=0; z < size_packet; z++)
     {
         
