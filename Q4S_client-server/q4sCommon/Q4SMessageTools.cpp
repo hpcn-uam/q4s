@@ -58,7 +58,7 @@ bool Q4SMessageTools_isPingMessage(std::string message, int *pingNumber, uint64_
         if ( timestampLineFirstPart.compare( timestampText ) == 0)
         {
             //*timeStamp = std::strtoul(timestampLineSecondPart.c_str(), NULL, 0);
-            sscanf(timestampLineSecondPart.c_str(), "%"PRIu64"", timeStamp);
+            sscanf(timestampLineSecondPart.c_str(), "%" PRIu64 "", timeStamp);
         }
         
     }
@@ -124,7 +124,7 @@ bool Q4SMessageTools_is200OKMessage(std::string message,bool flagPing,  int *pin
         getline( messageStream, timestampLineSecondPart);
         if ( timestampLineFirstPart.compare( timestampText ) == 0)
         {
-            sscanf(timestampLineSecondPart.c_str(), "%"PRIu64"", timeStamp);
+            sscanf(timestampLineSecondPart.c_str(), "%" PRIu64 "", timeStamp);
         }
         
     }

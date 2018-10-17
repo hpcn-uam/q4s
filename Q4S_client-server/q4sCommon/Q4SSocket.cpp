@@ -91,7 +91,7 @@ bool Q4SSocket::sendData( const char* sendBuffer, sockaddr_in* pAddrInfo, bool s
 
     if ( showInfo) 
     {
-        printf( "Bytes Sent: %ld\n", iResult );
+        printf( "Bytes Sent: %d\n", iResult );
     }
 
     return ok;

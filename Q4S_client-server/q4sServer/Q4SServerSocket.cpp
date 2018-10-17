@@ -571,7 +571,7 @@ bool Q4SServerSocket::createUdpSocket( )
         mUdpSocket = socket( mpAddrInfoResultUdp->ai_family, mpAddrInfoResultUdp->ai_socktype, mpAddrInfoResultUdp->ai_protocol );
         if( mUdpSocket <=0 ) 
         {
-            printf( "Error at socket(): %ld\n" );
+            printf( "Error at socket(): %d\n", mUdpSocket);
             freeaddrinfo( mpAddrInfoResultUdp );
             //WSACleanup( );
             ok &= false;

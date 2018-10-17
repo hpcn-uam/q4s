@@ -106,7 +106,7 @@ void Q4SCommonProtocol::calculateJitter(
                 // Actual time between this ping and previous store
                 arrPingJitters.push_back( (unsigned long)abs((double)actualPingTimeWithPrevious - (double)timeBetweenPings) );
                 #if SHOW_INFO2
-                    printf( "PING %d ET: %.3f\n", pingIndex, actualPingTimeWithPrevious );
+                    printf( "PING %d ET: %" PRIu64 "\n", pingIndex, actualPingTimeWithPrevious );
                 #endif
             }
             firstPing= false; 
@@ -304,7 +304,7 @@ bool Q4SCommonProtocol::checkStage1(unsigned long bandwidth, float packetLoss, Q
     {
         results.bandwidthAlert = true;
         #if SHOW_INFO
-            printf( "BandWidth limits not reached: %d\n", bandwidth);
+            printf( "BandWidth limits not reached: %lu\n", bandwidth);
         #endif
         ok = false;
     }
@@ -401,7 +401,7 @@ void Q4SCommonProtocol::showCheckMessage(Q4SMeasurementResult &upResults, Q4SMea
 
         if (downResults.packetLossAlert)
         {
-            printf( "PacketLoss Down bad value: %0.3f %\n", downResults.values.packetLoss);
+            printf( "PacketLoss Down bad value: %0.3f %%\n", downResults.values.packetLoss);
         }
 
         if (upResults.latencyAlert)
@@ -421,7 +421,7 @@ void Q4SCommonProtocol::showCheckMessage(Q4SMeasurementResult &upResults, Q4SMea
 
         if (upResults.packetLossAlert)
         {
-            printf( "PacketLoss Up bad value: %0.3f %\n", upResults.values.packetLoss);
+            printf( "PacketLoss Up bad value: %0.3f %%\n", upResults.values.packetLoss);
         }
     #endif
 }

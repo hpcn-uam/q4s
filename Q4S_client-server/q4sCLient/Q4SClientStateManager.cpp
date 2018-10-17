@@ -92,16 +92,16 @@ bool Q4SClientStateManager::stateInit (Q4SClientState state)
                 if (beginOk)
                 {
                     #if SHOW_INFO
-                        printf( "Limits - Latency: %d ms\n", mParams.latency);
-                        printf( "Limits - Jitter Up: %d ms\n", mParams.jitterUp);
-                        printf( "Limits - Jitter Down: %d ms\n", mParams.jitterDown);
-                        printf( "Limits - Bandwidth Up: %d kb/s\n", mParams.bandWidthUp);
-                        printf( "Limits - Bandwidth Down: %d kb/s\n", mParams.bandWidthDown);
-                        printf( "Limits - PacketLoss Up: %.3f %\n", mParams.packetLossUp);
-                        printf( "Limits - PacketLoss Down: %.3f %\n", mParams.packetLossDown);
+                        printf( "Limits - Latency: %0.3f ms\n", mParams.latency);
+                        printf( "Limits - Jitter Up: %0.3f ms\n", mParams.jitterUp);
+                        printf( "Limits - Jitter Down: %0.3f ms\n", mParams.jitterDown);
+                        printf( "Limits - Bandwidth Up: %lu kb/s\n", mParams.bandWidthUp);
+                        printf( "Limits - Bandwidth Down: %lu kb/s\n", mParams.bandWidthDown);
+                        printf( "Limits - PacketLoss Up: %.3f %%\n", mParams.packetLossUp);
+                        printf( "Limits - PacketLoss Down: %.3f %%\n", mParams.packetLossDown);
                         printf( "Params - QOSLevelDown: %d\n", mParams.qosLevelDown);
                         printf( "Params - QOSLevelUp: %d\n", mParams.qosLevelUp);
-                        printf( "Params - AlertPause: % ms\n", mParams.alertPause);
+                        printf( "Params - AlertPause: %lu ms\n", mParams.alertPause);
                         printf( "Params - RecoveryPause: %lu ms\n", mParams.recoveryPause);
                         printf( "Params - NegotiationTimeBetweenPings Up: %lu ms\n", mParams.procedure.negotiationTimeBetweenPingsUplink);
                         printf( "Params - NegotiationTimeBetweenPings Down: %lu ms\n", mParams.procedure.negotiationTimeBetweenPingsDownlink);
