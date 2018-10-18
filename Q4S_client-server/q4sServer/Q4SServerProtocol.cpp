@@ -586,7 +586,7 @@ bool Q4SServerProtocol::measureStage0(Q4SSDPParams params, Q4SMeasurementResult 
     std::vector<uint64_t> arrSentPingTimestamps;
     Q4SMeasurementValues upMeasurements;
     ok &= !mReceivedMessagesTCP.readCancelMessage();
-    unsigned long firstPing;             
+    int firstPing;             
     bool okCancel= true; 
     struct timeval time_s;   
     int time_error = gettimeofday(&time_s, NULL); 
@@ -602,7 +602,7 @@ bool Q4SServerProtocol::measureStage0(Q4SSDPParams params, Q4SMeasurementResult 
         // Wait to receive the first Ping
         Q4SMessageInfo  messageInfo;
         ok= false; 
-        for (firstPing= 0; ok==false && okCancel==true && firstPing<=pingsToSend; firstPing++)
+        for (firstPing= 0; ok==false && okCancel==true && firstPing<=int(pingsToSend); firstPing++)
         {
         //printf("firstPing:%d\n", firstPing );
             while(okCancel && mReceivedMessagesUDP.size()==0)
@@ -753,7 +753,7 @@ bool Q4SServerProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
     Q4SMeasurementValues upMeasurements;
     ok &= !mReceivedMessagesTCP.readCancelMessage();
     bool okCancel= true; 
-    unsigned long firstPing;
+    int firstPing;
     struct timeval time_s;   
     uint64_t initialTime;
     uint64_t actualTime; 
@@ -769,7 +769,7 @@ bool Q4SServerProtocol::measureContinuity(Q4SSDPParams params, Q4SMeasurementRes
         ok= false; 
         // Wait to recive the first Ping
         Q4SMessageInfo  messageInfo;
-        for (firstPing= 0; ok==false && okCancel==true && firstPing<=pingsToSend; firstPing++)
+        for (firstPing= 0; ok==false && okCancel==true && firstPing<=int(pingsToSend); firstPing++)
         {
         //printf("firstPing:%d\n", firstPing );
             while(okCancel && mReceivedMessagesUDP.size()==0)
