@@ -212,6 +212,12 @@ void Q4SMessage::makeFirstLineRequestMethod(Q4SMType q4SMType)
             stringType = "Q4S-ALERT";
         }
         break;
+
+        case Q4SMTYPE_INVALID:
+        {
+            stringType = "INVALID";
+        }
+        break;
     }
 
     mMessage.append(stringType);
@@ -300,6 +306,11 @@ void Q4SMessage::makeBody(Q4SMType q4SMType)
         break;
 
         case Q4SMTYPE_Q4SALERT:
+        {
+        }
+        break;
+
+        case Q4SMTYPE_INVALID:
         {
         }
         break;

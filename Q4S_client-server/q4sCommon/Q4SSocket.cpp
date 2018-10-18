@@ -153,8 +153,6 @@ bool Q4SSocket::receiveData( char* receiveBuffer, int receiveBufferSize, sockadd
     {
         mPeerAddrInfoLen = (socklen_t)sizeof( mPeerAddrInfo );
     }
-    char ipstr[200];
-    int port;
 
 
     iResult = recvfrom( mSocket, receiveBuffer, receiveBufferSize, 0, ( sockaddr* )&mPeerAddrInfo, &mPeerAddrInfoLen );

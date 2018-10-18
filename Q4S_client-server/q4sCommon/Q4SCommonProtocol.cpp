@@ -15,7 +15,6 @@ void Q4SCommonProtocol::calculateLatency(Q4SMessageManager &mReceivedMessages, s
     float actualPingLatency;
     int pingIndex = 0;
     int pingMaxCount = pingsSent;
-    bool ok= true; 
     int sequenceNumberPing; 
     uint64_t TimeStampPing; 
     // Prepare for Latency calculation
@@ -67,15 +66,12 @@ void Q4SCommonProtocol::calculateJitter(
     uint64_t actualPingTimeWithPrevious;
     unsigned long packetLossCount = 0;
     int indexReceived= 0; 
-    struct timeval time_s;
-    int time_error = gettimeofday(&time_s, NULL); 
-    uint64_t timeStamp =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
+
+
     // Prepare for Jitter calculation
     //printf("TIMESTAMP: %"PRIu64"\n", timeStamp);
     for( pingIndex = 0; pingIndex < pingMaxCount && mReceivedMessages.size()>0; pingIndex++ )
     {
-        time_error = gettimeofday(&time_s, NULL); 
-        timeStamp =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
         //printf("TIMESTAMP: %"PRIu64"\n", timeStamp);
         if( mReceivedMessages.readPingMessage( pingIndex, messageInfo, true ) == true )
         {
@@ -201,8 +197,6 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
     if (!recivedSequenceNumberList.empty())
     {
         unsigned long packetLossCount = 0;
-        unsigned long prevSequenceNumber = 0;
-        unsigned long listIndex = 0;
         unsigned long sequenceNumber = 0;        
         uint64_t TimeStampInit;
         uint64_t TimeStampEnd;

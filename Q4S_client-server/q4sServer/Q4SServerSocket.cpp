@@ -244,7 +244,6 @@ bool Q4SServerSocket::receiveUdpData( char* receiveBuffer, int receiveBufferSize
 bool Q4SServerSocket::initializeSockets()
 {
     //WSADATA     wsaData;
-    int         iResult;
     bool        ok = true;
 
 

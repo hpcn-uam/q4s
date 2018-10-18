@@ -38,6 +38,11 @@ std::string Q4SSDP_alertingMode_getText(Q4SSDPAlertingMode alertingMode)
                 text.append(Q4SSDPALERTINGMODE_REACTIVE_PATTERN);
             }
         break;
+        case Q4SSDPALERTINGMODE_INVALID:
+            {
+                text.append(Q4SSDPALERTINGMODE_REACTIVE_PATTERN);
+            }
+        break;
     }
 
     return text;
