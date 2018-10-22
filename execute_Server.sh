@@ -25,18 +25,6 @@ option=""
     				tput clear
     				tput bold 
 	    			echo -ne \\nQuitting ...
-	    			tput sgr0
-					#just to make sure & clean from previous failed runs
-	    			sudo tc qdisc del dev ifb0 root netem 2>/dev/null
-		    		sudo tc qdisc del dev eth0 ingress 2>/dev/null
-					sudo tc qdisc del dev lo ingress 2>/dev/null
-					delete_file temp_s >/dev/null
-					delete_file temp_r >/dev/null
-
-					tput bold 
-					echo -e \\n\\nHave fun!\\n
-					tput sgr0
-					break
 	    			;;
 	    		*) 
 					tput clear
