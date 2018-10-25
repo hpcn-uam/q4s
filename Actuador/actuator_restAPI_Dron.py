@@ -41,6 +41,8 @@ def main():
                     elif word== "FLAG_IDB":
                         if int(text[index+1])==1:
                             flag_IDB=True
+                        else:
+                            flag_IDB=False
                     line=text_file.readline()
             text_file.close()
                     
