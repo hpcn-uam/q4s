@@ -498,7 +498,7 @@ void Q4SServerProtocol::alert(std::string alertMessage)
         lastAlertTimeStamp = actualTime;
         std::string message = "ALERT "+alertMessage;
         #if SHOW_INFO
-        printf("ENVIO ALERT\n");
+            printf("ENVIO ALERT\n");
         #endif
         mServerSocket.sendAlertData(message.c_str());
     }

@@ -21,13 +21,39 @@ def main():
         #with open("../test/measured/dynamic_actuator.txt", "w") as text_file:
         #    ts= time.time()
         #   text_file.write("%f,0,0,0,0,0,0\n"%ts)
+        with open("ActuatorConfigFile.txt","r") as text_file:
+            line=text_file.readline()
+            while line:
+                text=line.rsplit("=")
+                for index, word in enumerate(text[:-1]):
+                    if word== "CODER_IP":
+                        coder_ip=text[index+1].rstrip()                    
+                        print(coder_ip)
+                    elif word== "CODER_PORT":
+                        coder_port=text[index+1].rstrip()
+                        print(coder_port)
+                    elif word== "Q4S_PORT":
+                        port_number=int(text[index+1])
+                        print(port_number)
+                    elif word== "Q4S_IP":
+                        client_ip=text[index+1].rstrip()
+                        print(client_ip)
+                    line=text_file.readline()
+            text_file.close()
+                    
+                    
         server = socketserver.UDPServer(('', port_number), UDPHandler)
-        connHTTP = http.client.HTTPConnection("127.0.0.1:5050")
+        server.coder_ip=coder_ip
+        server.coder_port=coder_port
+        server.client_ip=client_ip
+        HTTPConAddr="%s:%s"%(coder_ip, coder_port)
+        connHTTP = http.client.HTTPConnection(HTTPConAddr)
         server.level= 0
         server.my_ip=socket.gethostbyname(socket.gethostname())
-        server.client_ip="192.168.1.102"
+        #server.client_ip="192.168.1.102"
         server.flag_p_size= True
-        server.flag_Continuity=False
+        server.flag_Continuity_dron=False
+        server.flag_Continuity_server=False
         server.QoSlevel= 0
         server.packet_size=2
         server.coder_direction = (coder_ip, coder_port)
@@ -43,9 +69,16 @@ class UDPHandler(socketserver.BaseRequestHandler):
     """Handler class for the UDP server"""
 
     def handle(self):
+        flag_localhost=False
         flag_Termination= False
-        flag_Continuity= self.server.flag_Continuity
+        print("connected from:%s"%str(self.client_address[0]))
+        if str(self.client_address[0])==self.server.my_ip:
+                flag_localhost=True
+
         level = self.server.level
+        flag_Continuity_dron=self.server.flag_Continuity_dron
+        flag_Continuity_server=self.server.flag_Continuity_server
+
         flag_p_size= self.server.flag_p_size
         packet_size=self.server.packet_size
         QoSlevel = self.server.QoSlevel
@@ -53,19 +86,39 @@ class UDPHandler(socketserver.BaseRequestHandler):
         data = data.decode("utf-8")
         coder_ip = self.server.coder_direction[0]
         coder_port = self.server.coder_direction[1]
-        latency, jitter, bandwidth, packetloss, flag_Termination,flag_Continuity = parse_metrics(data)
+        latency, jitter, bandwidth, packetloss,lt_up, jt_up, pl_up, bw_up, flag_Termination,flag_Continuity = parse_metrics(data)
         if flag_Continuity:
+            if flag_localhost:
+                self.server.flag_Continuity_dron=True
+                print("Flag localhost_continuity")
+            else: 
+                self.server.flag_Continuity_server=True
+                print("Flag server continuity2")
+        
+        if self.server.flag_Continuity_dron & self.server.flag_Continuity_server:
+            self.server.flag_Continuity_dron=False
+            self.server.flag_Continuity_server=False
             command_Decodec="ssh hpcn@%s 'cd Repos/Packetization-LHE;screen -S screenDecodec -d -m ./LHEPacketizer.out -rc %s --pipe /home/hpcn/Repos/Packetization-LHE/dummy'"%(self.server.client_ip, self.server.my_ip)
+            print(command_Decodec)
             os.system(command_Decodec)
             time.sleep(1)
 
         
-        flag_p_size, level, QoSlevel,packet_size,ts,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, level, flag_p_size, QoSlevel, packet_size,flag_Continuity)
+        flag_p_size, level, QoSlevel,packet_size,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, lt_up, jt_up, pl_up, bw_up, level, flag_p_size, QoSlevel, packet_size,flag_Continuity,flag_Termination, flag_localhost)
+        params =urllib.parse.urlencode({'fps': fps, 'clr': clr, 'rs': rs, 'wp':width ,'hp':height})
+        #with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
+        #        text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr,QoSlevel))
+        headers = {"Content-type": "","Accept": "text/plain"}
+        conn = http.client.HTTPConnection(self.server.coder_ip,self.server.coder_port)
+        conn.request("POST","",params, headers)
+        res = conn.getresponse()
         self.server.level= level
         self.server.flag_p_size= flag_p_size
         self.server.flag_Continuity=flag_Continuity
         self.server.QoSlevel= QoSlevel
         self.server.packet_size=packet_size
+        
+        """
         if QoSlevel>10:
             self.server.QoSlevel=0
             self.server.level=0
@@ -76,6 +129,7 @@ class UDPHandler(socketserver.BaseRequestHandler):
             self.server.level=0
             self.server.packet_size=2
             self.server.flag_p_size= True
+        """
         if flag_Termination:
             command="screen -S screenDecodec -X at '#' stuff S^M"
             command2= 'ssh hpcn@%s "%s"'%(self.server.client_ip,command)
@@ -86,6 +140,8 @@ class UDPHandler(socketserver.BaseRequestHandler):
             self.server.level=0
             self.server.packet_size=2
             self.server.flag_p_size=True
+            self.server.flag_Continuity_dron=False
+            self.server.flag_Continuity_server=True
             height= 0
             width= 0
             fps= 0
@@ -107,7 +163,7 @@ class UDPHandler(socketserver.BaseRequestHandler):
 
 
 
-def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_size,QoSlevel, packet_size,flag_Continuity):
+def calculate_parameters(latency, jitter, bandwidth, packetloss, lt_up, jt_up, bw_up, pl_up, level, flag_p_size,QoSlevel, packet_size,flag_Continuity,flag_Termination, flag_localhost):
     """ From the network Q4S parameters generats the coder options."""
     #pylint: disable=unused-argument
     pl_flag=False
@@ -116,9 +172,9 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
     jt_flag=False 
     with open("../Q4S_client-server/q4sServer/dynamic_params.txt", "r") as text_file:
             aux = text_file.readline()
-            BW_up=aux[6:-1]
+            BW_up_app=aux[6:-1]
             aux = text_file.readline()
-            BW_down=aux[8:-1]
+            BW_down_app=aux[8:-1]
             aux = text_file.readline()
             latency_app=aux[8:-1]
             aux = text_file.readline()
@@ -134,36 +190,45 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
     dim_packet= [1,320],[1,640],[6,160],[8,128]
     packet_RTP= 750, 980, 1240, 1400
 
-    """""""""""""""""""""""""""""""""""""""""
-    AQUI HAY QUE PONER UMBRALES REALES
-    """""""""""""""""""""""""""""""""""""""""
-    if flag_Continuity==False:
+    if flag_Continuity==False & flag_Termination==False:
         if latency>float(latency_app):
             lt_flag=True
-            if packet_size==0:
-                flag_p_size=False
-
+            if flag_localhost:
+                if packet_size==0:
+                    flag_p_size=False
+            else:
+                if packet_size==3:
+                    flag_p_size=False
         elif packetloss>30:
             if packet_size==0:
                 flag_p_size=False
             pl_flag=True
-        elif bandwidth < float(BW_up):
+        elif bandwidth < float(BW_up_app):
             if packet_size==3:
                 flag_p_size=False
             BW_flag=True
         elif jitter > float(jitter_up_app):
             jt_flag=True
-        if (lt_flag | pl_flag | jt_flag) & flag_p_size:        
-            packet_size-=1
+        if flag_p_size:
+            if (pl_flag | jt_flag):        
+                packet_size-=1
+                #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
+            #os.system(command)
+            elif BW_flag & flag_p_size:
+                packet_size+=1      
+            elif lt_flag & flag_p_size: 
+                if flag_localhost:
+                    packet_size-=1
+                else:
+                    packet_size+=1
+            
+            flag_p_size=False       
             #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
         #os.system(command)
-        elif BW_flag & flag_p_size:
-            packet_size+=1      
-            #command="ssh root@192.168.1.101 lhe_config -h %d -w %d" %(dim_packet[packet_size][0],dim_packet[packet_size][1])
-        #os.system(command)
-        if (not flag_p_size)  & ((BW_flag)|(pl_flag)|(lt_flag)|(jt_flag)):
-            level+=1
-            flag_p_size=True
+        else:
+            if ((BW_flag)|(pl_flag)|(lt_flag)|(jt_flag)):
+                level+=1
+                flag_p_size=True
 
         if (not BW_flag) & (not pl_flag) & (not lt_flag)& (not jt_flag):
             QoSlevel-=1
@@ -172,6 +237,9 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
         else:
             QoSlevel+=1
     #print("QoS level=", QoSlevel
+    if flag_Termination: 
+        packet_size=2
+        level=0
     if level<=0: 
         fps=2
         clr=1
@@ -218,17 +286,8 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss,level, flag_p_si
         fps=12
         clr=0
         rs= 1
-    params =urllib.parse.urlencode({'fps': fps, 'clr': clr, 'rs': rs, 'wp':dim_packet[packet_size][1] ,'hp':dim_packet[packet_size][0]})
-    ts= time.time()
-    #with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
-    #        text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr,QoSlevel))
-    headers = {"Content-type": "","Accept": "text/plain"}
 
-    conn = http.client.HTTPConnection('127.0.0.1',5050)
-    conn.request("POST","",params, headers)
-    res = conn.getresponse()
-
-    return flag_p_size, level, QoSlevel, packet_size,ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr
+    return flag_p_size, level, QoSlevel, packet_size,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr
 
 
 def parse_metrics(text):
@@ -237,6 +296,10 @@ def parse_metrics(text):
     jitter = float('nan')
     bandwidth = float('nan')
     packetloss = float('nan')
+    lt_up= float('nan')
+    jt_up= float('nan')
+    pl_up= float('nan')
+    bw_up= float('nan')
     flag_Termination=False
     flag_Continuity=False
     text = text.split()
@@ -264,9 +327,29 @@ def parse_metrics(text):
         elif word == "BandWidth:":
             try:
                 bandwidth = float(text[index+1])
-            except ValueError:
+            except ValueError: 
                 bandwidth = float('nan')
-    return latency, jitter, bandwidth, packetloss, flag_Termination, flag_Continuity
+        elif word == "Latency up:":
+            try: 
+                lt_up= float(text[index+1])
+            except ValueError:
+                lt_up=float(text[index+1])
+        elif word == "Jitter up:":
+            try:
+                jt_up= float(text[index+1])
+            except ValueError: 
+                jt_up= float('nan')
+        elif word == "PacketLoss up":
+            try:
+                pl_up= float(text[index+1])
+            except ValueError:
+                pl_up= float('nan')
+        elif word == "BandWidth:":
+            try:
+                bw_up= float(text[index+1])
+            except ValueError:
+                bw_up = float('nan')
+    return latency, jitter, bandwidth, packetloss, lt_up, jt_up, pl_up, bw_up, flag_Termination, flag_Continuity
 
 
 def parse_arguments(argv):
