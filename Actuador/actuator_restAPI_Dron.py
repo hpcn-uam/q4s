@@ -28,16 +28,16 @@ def main():
                 for index, word in enumerate(text[:-1]):
                     if word== "CODER_IP":
                         coder_ip=text[index+1].rstrip()                    
-                        print(coder_ip)
+                        #print(coder_ip)
                     elif word== "CODER_PORT":
                         coder_port=text[index+1].rstrip()
-                        print(coder_port)
+                        #print(coder_port)
                     elif word== "Q4S_PORT":
                         port_number=int(text[index+1])
-                        print(port_number)
+                        #print(port_number)
                     elif word== "Q4S_IP":
                         client_ip=text[index+1].rstrip()
-                        print(client_ip)
+                        #print(client_ip)
                     elif word== "FLAG_IDB":
                         if int(text[index+1])==1:
                             flag_IDB=True
@@ -63,10 +63,10 @@ def main():
         server.QoSlevel= 0
         server.packet_size=2
         server.coder_direction = (coder_ip, coder_port)
-        print('INFO: Started UDP server on port ', port_number)
+        #print('INFO: Started UDP server on port ', port_number)
         server.serve_forever()
     except KeyboardInterrupt:
-        print('INFO: ^C received, shutting down UDP server')
+        #print('INFO: ^C received, shutting down UDP server')
         server.shutdown()
     return
 
@@ -77,7 +77,7 @@ class UDPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         flag_localhost=False
         flag_Termination= False
-        print("connected from:%s"%str(self.client_address[0]))
+        #print("connected from:%s"%str(self.client_address[0]))
         if str(self.client_address[0])==self.server.my_ip:
                 flag_localhost=True
 
@@ -96,16 +96,16 @@ class UDPHandler(socketserver.BaseRequestHandler):
         if flag_Continuity:
             if flag_localhost:
                 self.server.flag_Continuity_dron=True
-                print("Flag localhost_continuity")
+                #print("Flag localhost_continuity")
             else: 
                 self.server.flag_Continuity_server=True
-                print("Flag server continuity2")
+                #print("Flag server continuity2")
         
         if self.server.flag_Continuity_dron & self.server.flag_Continuity_server:
             self.server.flag_Continuity_dron=False
             self.server.flag_Continuity_server=False
             command_Decodec="ssh hpcn@%s 'cd Repos/Packetization-LHE;screen -S screenDecodec -d -m ./LHEPacketizer.out -rc %s --pipe /home/hpcn/Repos/Packetization-LHE/dummy'"%(self.server.client_ip, self.server.my_ip)
-            print(command_Decodec)
+            #print(command_Decodec)
             os.system(command_Decodec)
             time.sleep(1)
 
@@ -153,7 +153,7 @@ class UDPHandler(socketserver.BaseRequestHandler):
             fps= 0
             rs= 0
             clr=0 
-        if flag_IDB:
+        if self.server.flag_IDB:
             if fps>0:
                 fps_curl= 110/int(fps) 
                 command_curl= "curl -i -XPOST 'http://%s:8086/write?db=racing_drones&precision=ms' --data-binary 'actuator_Dron QoS_level=%d,fps=%d,clr=%d,heigth=%d,width=%d'"%(self.server.client_ip,QoSlevel,fps_curl,int(clr),int(height), int(width))
