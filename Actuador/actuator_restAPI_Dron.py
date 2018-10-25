@@ -38,6 +38,9 @@ def main():
                     elif word== "Q4S_IP":
                         client_ip=text[index+1].rstrip()
                         print(client_ip)
+                    elif word== "FLAG_IDB":
+                        if int(text[index+1])==1:
+                            flag_IDB=True
                     line=text_file.readline()
             text_file.close()
                     
@@ -46,6 +49,7 @@ def main():
         server.coder_ip=coder_ip
         server.coder_port=coder_port
         server.client_ip=client_ip
+        server.flag_IDB=flag_IDB
         HTTPConAddr="%s:%s"%(coder_ip, coder_port)
         connHTTP = http.client.HTTPConnection(HTTPConAddr)
         server.level= 0
@@ -147,10 +151,11 @@ class UDPHandler(socketserver.BaseRequestHandler):
             fps= 0
             rs= 0
             clr=0 
-        if fps>0:
-            fps_curl= 110/int(fps) 
-            command_curl= "curl -i -XPOST 'http://%s:8086/write?db=racing_drones&precision=ms' --data-binary 'actuator_Dron QoS_level=%d,fps=%d,clr=%d,heigth=%d,width=%d'"%(self.server.client_ip,QoSlevel,fps_curl,int(clr),int(height), int(width))
-            os.system(command_curl)
+        if flag_IDB:
+            if fps>0:
+                fps_curl= 110/int(fps) 
+                command_curl= "curl -i -XPOST 'http://%s:8086/write?db=racing_drones&precision=ms' --data-binary 'actuator_Dron QoS_level=%d,fps=%d,clr=%d,heigth=%d,width=%d'"%(self.server.client_ip,QoSlevel,fps_curl,int(clr),int(height), int(width))
+                os.system(command_curl)
 
         #print("Imprimir:",height,width,fps,rs,clr,self.server.QoSlevel)
         """
