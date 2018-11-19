@@ -1046,7 +1046,7 @@ void* Q4SServerProtocol::manageUdpReceivedData( )
                     printf( "Ping responsed %d\n", pingNumber);
                 #endif
                 Q4SMessage message200;
-                sprintf( reasonPhrase, "Q4S/1.0 200 OK\nSequence-Number:%d\nTimestamp:%" PRIu64 "\r\n", pingNumber,receivedTimeStamp );
+                sprintf( reasonPhrase, "Q4S/1.0 200 OK\r\nSequence-Number:%d\r\nTimestamp:%" PRIu64 "\r\n\r\n", pingNumber,receivedTimeStamp );
 
                 ok &= mServerSocket.sendUdpBWData( connId, reasonPhrase );
 
@@ -1146,7 +1146,7 @@ void* Q4SServerProtocol::sendUDPBWFn(void* lpData )
             {
                 //ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SServerConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
                 sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%lu\nTimestamp:%" PRIu64 "\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\n\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
                 ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID,   message_char);
                 sequenceNumber++; 
                 j++; 
@@ -1158,7 +1158,7 @@ void* Q4SServerProtocol::sendUDPBWFn(void* lpData )
             {        
                 //printf("mensahe extra %d, %d, %d, %d\n", interval, ms_per_message[k], k, sizeof(ms_per_message));
                 sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%lu\nTimestamp:%" PRIu64 "\r\n%s",sequenceNumber,TimeStamp2,msn_BW);
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\n\r\n%s",sequenceNumber,TimeStamp2,msn_BW);
                 ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID,   message_char);
                 
                 sequenceNumber++;  

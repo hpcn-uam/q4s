@@ -771,7 +771,7 @@ void* Q4SClientProtocol::manageUdpReceivedData( )
                 #endif
                 Q4SMessage message200;
                 //printf(" RECEIVED TIMESTAMP: %lu TIMESTAMP MESSAGE: %lu\n", receivedTimeStamp, );
-                sprintf( reasonPhrase, "Q4S/1.0 200 OK\nSequence-Number: %d\nTimestamp: %" PRIu64 "\r\n", pingNumber,receivedTimeStamp );
+                sprintf( reasonPhrase, "Q4S/1.0 200 OK\r\nSequence-Number: %d\r\nTimestamp: %" PRIu64 "\r\n\r\n", pingNumber,receivedTimeStamp );
                 ok &= mClientSocket.sendUdpData( reasonPhrase );
 
                 #if SHOW_INFO2
@@ -965,7 +965,7 @@ void* Q4SClientProtocol::sendUDPBWFn(void* lpData )
 //gettimeofday(&time_s0, NULL); 
                 //ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SClientConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
              sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%lu\nTimestamp:%" PRIu64 "\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\n\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
 //gettimeofday(&time_s1, NULL); 
 //printf("Cost initRequest: %lus%luus\n",(time_s1.tv_sec-time_s0.tv_sec),(time_s1.tv_usec-time_s0.tv_usec));
 //gettimeofday(&time_s0, NULL); 
@@ -983,7 +983,7 @@ void* Q4SClientProtocol::sendUDPBWFn(void* lpData )
             {        
                 //printf("mensahe extra %d, %d, %d, %d\n", interval, ms_per_message[k], k, sizeof(ms_per_message));
                  sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%lu\nTimestamp:%" PRIu64 "\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%lu\nTimestamp:%" PRIu64 "\r\n\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
                 //ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SClientConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
                 ok &= mClientSocket.sendUdpBWData(message_char);
                 sequenceNumber++;  

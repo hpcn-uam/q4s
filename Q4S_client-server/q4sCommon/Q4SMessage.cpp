@@ -55,7 +55,6 @@ bool Q4SMessage::initRequest(
 
     // init
     ok &= initRequest(q4SMType, host, port);
-
     // SDP     
     mMessage.append(Q4SSDP_create(q4SSDPParams)); 
 
@@ -69,7 +68,6 @@ bool Q4SMessage::initRequest(Q4SMType q4SMType, std::string host, std::string po
 
     // init
     ok &= initRequest(q4SMType, host, port);
-
     // SDP
     mMessage.append(Q4SSDP_create(q4SSDPParams));
 
@@ -97,7 +95,9 @@ bool Q4SMessage::init200OKBeginResponse(Q4SSDPParams q4SSDPParams)
     bool ok = true;
     //sprintf(mMesZZsage, "200 OK\n%s%lu/%lu\n",QOSLEVEL_PATTERN, params.qosLevelUp, params.qosLevelDown, ALERTINGMODE_PATTERN, params.q4SSDPAlertingMode);
     mMessage="Q4S/1.0 200 OK\r\n";
+    mMessage.append("\r\n");
     mMessage.append(Q4SSDP_create(q4SSDPParams));
+    mMessage.append("\r\n");
     return ok;
 }
 
@@ -167,9 +167,8 @@ void Q4SMessage::makeFirstLineRequest(Q4SMType q4SMType, std::string host, std::
     mMessage.append(" ");
 
     // Q4S-Version
-    mMessage.append(" ");
     addVersion();
-    mMessage.append("\n");
+    mMessage.append("\r\n");
 }
 
 void Q4SMessage::makeFirstLineRequestMethod(Q4SMType q4SMType)
@@ -248,7 +247,7 @@ void Q4SMessage::makeHeaders(
     {
         mMessage.append("Sequence-Number:");
         mMessage.append(std::to_string((unsigned long long int)sequenceNumber));
-        mMessage.append("\n");
+        mMessage.append("\r\n");
     }
 
     //Timestamp
@@ -256,7 +255,7 @@ void Q4SMessage::makeHeaders(
     {
         mMessage.append("Timestamp:");
         mMessage.append(std::to_string((uint64_t)timeStamp));
-        mMessage.append("\n");
+        mMessage.append("\r\n");
     }
 
     //Stage
@@ -264,13 +263,14 @@ void Q4SMessage::makeHeaders(
     {
         mMessage.append("Stage:");
         mMessage.append(std::to_string((unsigned long long int)stage));
-        mMessage.append("\n");
+        mMessage.append("\r\n");
     }
 
     // Measurements
     if (isMeaurements)
-    {       
-       mMessage.append(Q4SMeasurementValues_create(*values));
+    {     
+        mMessage.append(Q4SMeasurementValues_create(*values));
+        mMessage.append("\r\n");
         
     }
 }
@@ -330,7 +330,7 @@ void Q4SMessage::makeFirstLineResponse(Q4SResponseCode q4SResponseCode, std::str
     mMessage.append(reasonPhrase);
 
     // CRLF
-    //mMessage.append("\r\n");
+    mMessage.append("\r\n");
 }
 
 void Q4SMessage::makeFirstLineResponseStatusCode(Q4SResponseCode q4SResponseCode)
@@ -370,7 +370,7 @@ std::string Q4SMeasurementValues_create(Q4SMeasurementValues results)
     std::ostringstream streamBandwidth;
     streamBandwidth << results.bandwidth;
     message.append(streamBandwidth.str());
-    message.append("\n");
+    //message.append("\n");
     return message;
  }
  

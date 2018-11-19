@@ -154,7 +154,7 @@ std::string makeProcedureLine(Q4SSDPProcedure procedure)
     line.append("/");
     line.append(std::to_string(( unsigned long long int)procedure.windowSizePacketLossCalcDownlink));
     line.append(PROCEDURE_CLOSE_PATTERN);
-    line.append("\r\n");
+    line.append("\n");
     return line;
 }
 
@@ -167,14 +167,24 @@ bool Q4SSDP_parseOneElementLine(std::string message, std::string pattern, std::s
 
     if (ok)
     {   
-        initialPosition = message.find(pattern) + pattern.length();
-        if (initialPosition == std::string::npos) ok = false;
-    }
+        initialPosition = message.find(pattern);
+        if (initialPosition == std::string::npos)
+        {
+            printf("NO ENCONTRADO 1");
 
+            ok = false;
+        }
+        initialPosition = message.find(pattern) + pattern.length();
+    }
+    printf("ENCONTRADO\n");
     if (ok)
     {
         finalPosition = message.find("\n", initialPosition+1);
-        if (finalPosition == std::string::npos) ok = false;
+        if (finalPosition == std::string::npos) 
+        {
+            printf("NO ENCONTRADO 2\n");
+            ok = false;
+        }
     }
 
     if (ok)
@@ -235,6 +245,12 @@ bool Q4SSDP_parseQosLevel(std::string message, int& up, int& down)
         up = std::stoi(firstParamText);
         down = std::stoi(secondParamText);
     }
+    else
+    {
+        up=0; 
+        down=0; 
+        ok=true;
+    }
 
     return ok;
 }
@@ -252,6 +268,12 @@ bool Q4SSDP_parseAlertingMode(std::string message, Q4SSDPAlertingMode& alertingM
     {
         alertingMode = Q4SSDP_alertingMode_getFromText(paramText);
     }
+    else
+    {
+        alertingMode = Q4SSDP_alertingMode_getFromText("Reactive");
+        ok=true;
+    }
+
     
     return ok;
 }
@@ -269,7 +291,11 @@ bool Q4SSDP_parseAlertPause(std::string message, unsigned long& appAlertPause)
     {
         appAlertPause = std::stol(paramText);
     }
-    
+    else
+    {
+        appAlertPause = 2000;
+        ok=true;
+    }
     return ok;
 }
 
@@ -286,7 +312,11 @@ bool Q4SSDP_parseRecoveryPause(std::string message, unsigned long& recoveryPause
     {
         recoveryPause = std::stol(paramText);
     }
-    
+    else
+    {
+        recoveryPause = 2000;
+        ok=true;
+    }
     return ok;
 }
 
@@ -303,7 +333,11 @@ bool Q4SSDP_parseLatency(std::string message, float& latency)
     {
         latency = std::stof(paramText);
     }
-    
+    else
+    {
+        latency = 5.5;
+        ok=true;
+    }
     return ok;
 }
 
@@ -320,7 +354,12 @@ bool Q4SSDP_parsePacketSize(std::string message,int& packet_length)
     {
         packet_length = std::stoi(paramText);
     }
-    
+    else 
+    {
+        packet_length = 1000;
+        ok = true;
+    }
+
     return ok;
 }
 
@@ -340,7 +379,12 @@ bool Q4SSDP_parseJitter(std::string message, float& up, float& down)
         up = std::stof(firstParamText);
         down = std::stof(secondParamText);
     }
-
+    else
+    {
+        up=1.1;
+        down=1.1;
+        ok=true; 
+    }
     return ok;
 }
 
@@ -359,7 +403,12 @@ bool Q4SSDP_parseBandWidth(std::string message, unsigned long& up, unsigned long
         up = std::stol(firstParamText);
         down = std::stol(secondParamText);
     }
-
+    else
+    {
+        up=27000;
+        down=27000;
+        ok=true;
+    }
     return ok;
 }
 
@@ -379,7 +428,12 @@ bool Q4SSDP_parsePacketLoss(std::string message, float& up, float& down)
         up = std::stof(firstParamText);
         down = std::stof(secondParamText);
     }
-
+    else
+    {
+        up=5;
+        down=5; 
+        ok=true;
+    }
     return ok;
 }
 
@@ -471,6 +525,19 @@ bool Q4SSDP_parseProcedure(std::string message, Q4SSDPProcedure &procedure)
         procedure.windowSizePacketLossCalcUplink = std::stol(message.substr(betweenWindowSizeLatencysWindowSizePacketLossesPosition + 1, betweenWindowSizePacketLossesPosition - (betweenWindowSizeLatencysWindowSizePacketLossesPosition + 1 )));
         procedure.windowSizePacketLossCalcDownlink = std::stol(message.substr(betweenWindowSizePacketLossesPosition + 1, finalPosition - (betweenWindowSizePacketLossesPosition + 1 )));
     }
+    else
+    {
+        procedure.negotiationTimeBetweenPingsUplink = 50;
+        procedure.negotiationTimeBetweenPingsDownlink = 50;
+        procedure.continuityTimeBetweenPingsUplink = 50;
+        procedure.continuityTimeBetweenPingsDownlink = 50;
+        procedure.bandwidthTime = 1000;
+        procedure.windowSizeLatencyCalcUplink = 30;
+        procedure.windowSizeLatencyCalcDownlink = 30;
+        procedure.windowSizePacketLossCalcUplink = 20;
+        procedure.windowSizePacketLossCalcDownlink = 20;
+        ok=true;
+    }
     
     return ok;
 }
@@ -489,7 +556,7 @@ std::string Q4SSDP_create(Q4SSDPParams params)
     message.append( makeProcedureLine(params.procedure));
     message.append("a=packet-length:");
     message.append(std::to_string(params.size_packet));   
-    message.append("\n");
+    //message.append("\n");
     return message;
 }
 
