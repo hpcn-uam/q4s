@@ -1,6 +1,6 @@
-BW_up=8001
-BW_down=8001
-latency=10
-jitter_up=5.1
-jitter_down=5.1
-packet_length=1240
+BW_up=48000
+BW_down=48000
+latency=41.000000
+jitter_up=20.000000
+jitter_down=20.000000
+packet_length=1420
