@@ -154,7 +154,7 @@ std::string makeProcedureLine(Q4SSDPProcedure procedure)
     line.append("/");
     line.append(std::to_string(( unsigned long long int)procedure.windowSizePacketLossCalcDownlink));
     line.append(PROCEDURE_CLOSE_PATTERN);
-    line.append("\n");
+    line.append("\r\n");
     return line;
 }
 
