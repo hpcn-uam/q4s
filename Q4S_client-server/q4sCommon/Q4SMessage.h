@@ -76,26 +76,11 @@ class Q4SMessage
                         bool isMeaurements=false,
                         Q4SMeasurementValues *values=NULL);
 
-    bool    initRequest(Q4SMType q4SMType, 
-                        std::string host, 
-                        std::string port,
-                        bool isSequenceNumber,
-                        unsigned long sequenceNumber,
-                        bool isTimeStamp,
-                        uint64_t timeStamp,
-                        bool isStage,
-                        unsigned long stage,
-                        Q4SSDPParams q4SSDPParams);
-
-    bool    initRequest(Q4SMType q4SMType, 
-                        std::string host, 
-                        std::string port, 
-                        Q4SSDPParams q4SSDPParams);
+  
 
     bool    initResponse(Q4SResponseCode q4SResponseCode, std::string reasonPhrase);
     bool    init200OKBeginResponse(Q4SSDPParams q4SSDPParams);
-    bool    initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp);
-    bool    initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp, Q4SMeasurementValues results);
+    bool    initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp, bool results_flag=false, Q4SMeasurementValues *results=NULL);
     bool    initBWidth(std::string host, std::string port, unsigned long sequenceNumber);
     void    done( );
 

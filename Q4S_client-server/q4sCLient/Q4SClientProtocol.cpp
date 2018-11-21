@@ -476,7 +476,7 @@ bool Q4SClientProtocol::interchangeMeasurementProcedure(Q4SMeasurementValues &do
     {
         // Send Info Ping with sequenceNumber 0
         Q4SMessage infoPingMessage;
-        ok &= infoPingMessage.initPing("myIp", q4SClientConfigFile.defaultUDPPort, 0, 0, results.values);
+        ok &= infoPingMessage.initPing("myIp", q4SClientConfigFile.defaultUDPPort, 0, 0, true, &results.values);
         ok &= mClientSocket.sendTcpData( infoPingMessage.getMessageCChar() );
     }
     
@@ -771,7 +771,7 @@ void* Q4SClientProtocol::manageUdpReceivedData( )
                 #endif
                 Q4SMessage message200;
                 //printf(" RECEIVED TIMESTAMP: %lu TIMESTAMP MESSAGE: %lu\n", receivedTimeStamp, );
-                sprintf( reasonPhrase, "Q4S/1.0 200 OK\r\nSequence-Number: %d\r\nTimestamp: %" PRIu64 "\r\n\r\n", pingNumber,receivedTimeStamp );
+                sprintf( reasonPhrase, "Q4S/1.0 200 OK\r\nSequence-Number:%d\r\nTimestamp:%" PRIu64 "\r\nContent-Length:0\r\n\r\n", pingNumber,receivedTimeStamp );
                 ok &= mClientSocket.sendUdpData( reasonPhrase );
 
                 #if SHOW_INFO2

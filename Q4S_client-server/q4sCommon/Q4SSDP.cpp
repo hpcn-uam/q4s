@@ -170,19 +170,16 @@ bool Q4SSDP_parseOneElementLine(std::string message, std::string pattern, std::s
         initialPosition = message.find(pattern);
         if (initialPosition == std::string::npos)
         {
-            printf("NO ENCONTRADO 1");
-
             ok = false;
         }
         initialPosition = message.find(pattern) + pattern.length();
     }
-    printf("ENCONTRADO\n");
+    
     if (ok)
     {
         finalPosition = message.find("\n", initialPosition+1);
         if (finalPosition == std::string::npos) 
         {
-            printf("NO ENCONTRADO 2\n");
             ok = false;
         }
     }
@@ -205,12 +202,13 @@ bool Q4SSDP_parseTwoElementsLine(std::string message, std::string pattern, std::
 
     if (ok)
     {   
-        initialPosition = message.find(pattern) + pattern.length();
+        initialPosition = message.find(pattern);
         if (initialPosition == std::string::npos) ok = false;
     }
 
     if (ok)
     {
+        initialPosition = message.find(pattern) + pattern.length();
         betweenPosition = message.find(separator, initialPosition+1);
         if (betweenPosition == std::string::npos) ok = false;
     }

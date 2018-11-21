@@ -174,7 +174,7 @@ std::set<unsigned long> Q4SCommonProtocol::obtainSortedSequenceNumberList(Q4SMes
     bool flag=true; 
     while (mReceivedMessages.readBandWidthMessage(messageSequenceNumber, true, &timeStamp, &packet_size) && flag)
     {
-//printf("TAMAÑO obtainSortedSequenceNumberList:%s\n", packet_size);
+        //printf("TAMAÑO obtainSortedSequenceNumberList:%s\n", packet_size);
         flag= mReceivedMessages.size()!=1; 
         TimeStamplist.insert(timeStamp);
         BWpacket_size=packet_size;
@@ -245,7 +245,7 @@ bool Q4SCommonProtocol::calculateBandwidthPacketLossStage1(Q4SMessageManager &mR
         //printf("timestamp end: %lu\n", TimeStampEnd);
         //printf("timestamp begin: %lu\n", TimeStampInit);
         //printf("DIFERENCIA TIMESTAMP: %f\n", ATimestamp);       
-
+        //printf("Sequence number bw: %d\n", sequenceNumber);
         float numberOfkilobytesPerSecond = (float)sequenceNumber * (float)BWpacket_size / (ATimestamp);//1066
         float kilobitsPerSecond = numberOfkilobytesPerSecond * 8;
         bandwidth = kilobitsPerSecond;

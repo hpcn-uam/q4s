@@ -5,163 +5,120 @@
 bool Q4SMessageTools_isPingMessage(std::string message, int *pingNumber, uint64_t *timeStamp)
 {
     bool ok = true;
-
+    bool HeaderEnd=false;
     // Auxiliar string
     std::string extracted;
+    std::string::size_type initialPosition;
+    std::string::size_type finalPosition;
+    std::string patternSeq="Sequence-Number:";
+    std::string patternCL="Content-Length:";
+    std::string patternTS="Timestamp:";
     // Convert message to a stringstream 
-    std::istringstream messageStream (message);
 
+    std::istringstream messageStream (message);
+    std::getline(messageStream, extracted);
+    initialPosition = extracted.find("PING");
+    if (initialPosition == std::string::npos)
+    {
+        ok = false;
+    }
     // Get method from message
     if ( ok )
     {
-        std::getline(messageStream, extracted, ' ');
-        // Check if method is ping
-        if ( extracted.compare("PING") != 0)
+        while (!extracted.empty()&&!HeaderEnd)
         {
-            ok = false;
+            extracted={}; 
+            std::getline(messageStream, extracted);
+
+            initialPosition = extracted.find(patternSeq);
+            if (initialPosition != std::string::npos)
+            {
+                initialPosition = initialPosition + patternSeq.length();
+                finalPosition = extracted.find("\n", initialPosition+1);
+                *pingNumber = std::stoi(extracted.substr(initialPosition, finalPosition-initialPosition));
+
+            }
+            initialPosition = extracted.find(patternTS);
+            if (initialPosition != std::string::npos)
+            {
+                initialPosition = initialPosition + patternTS.length();
+                finalPosition = extracted.find("\n", initialPosition+1);
+
+                sscanf(extracted.substr(initialPosition, finalPosition-initialPosition).c_str(), "%" PRIu64 "", timeStamp);
+
+
+            }
+            
+            if (strcmp(extracted.c_str(),"\r")==0)
+            {
+                HeaderEnd=true;   
+            }
+
         }
-    }
 
-    // Discard rest of first line
-    if (ok)
-    {
-        std::getline(messageStream, extracted);
-    }
-
-    // Get pingNumberfrom message
-    if ( ok )
-    {
-        std::string sequenceNumberLineFirstPart;
-        std::string sequenceNumberLineSecondPart;
-
-        // Check text
-        std::string sequenceNumberText = "Sequence-Number";
-        getline( messageStream, sequenceNumberLineFirstPart, ':' );
-        getline( messageStream, sequenceNumberLineSecondPart);
-        if ( sequenceNumberLineFirstPart.compare( sequenceNumberText ) == 0)
-        {
-            *pingNumber = std::stoi(sequenceNumberLineSecondPart);
-        }        
-    }
-
-    // Get TimeStamp
-    if ( ok )
-    {
-
-        std::string timestampLineFirstPart;
-        std::string timestampLineSecondPart;
-
-        // Check text
-        std::string timestampText = "Timestamp";
-        getline( messageStream, timestampLineFirstPart, ':' );
-        getline( messageStream, timestampLineSecondPart);
-        if ( timestampLineFirstPart.compare( timestampText ) == 0)
-        {
-            //*timeStamp = std::strtoul(timestampLineSecondPart.c_str(), NULL, 0);
-            sscanf(timestampLineSecondPart.c_str(), "%" PRIu64 "", timeStamp);
-        }
+        //printf("SEQUENCE %d\n", *sequenceNumber);
         
     }
-
-
+  
     return ok;
 }
 bool Q4SMessageTools_is200OKMessage(std::string message,bool flagPing,  int *pingNumber, uint64_t *timeStamp)
 {
-    bool ok = true;
 
+    bool ok = true;
+    bool HeaderEnd=false;
     // Auxiliar string
     std::string extracted;
+    std::string::size_type initialPosition;
+    std::string::size_type finalPosition;
+    std::string patternSeq="Sequence-Number:";
+    std::string patternCL="Content-Length:";
+    std::string patternTS="Timestamp:";
     // Convert message to a stringstream 
-    std::istringstream messageStream (message);
 
+    std::istringstream messageStream (message);
+    std::getline(messageStream, extracted);
+    initialPosition = extracted.find("200");
+    if (initialPosition == std::string::npos)
+    {
+        ok = false;
+    }
     // Get method from message
     if ( ok )
     {
-        std::getline(messageStream, extracted, ' ');        
-        std::getline(messageStream, extracted, ' ');
-
-
-        // Check if method is ping
-        //printf("%s\n", message.c_str());
-        //printf("EXTRAIDO: %s\n", extracted.c_str());
-        if ( extracted.compare("200") != 0)
+        while (!extracted.empty()&&!HeaderEnd&&flagPing)
         {
-            //printf("No detecta\n");
-            ok = false;
+            extracted={}; 
+            std::getline(messageStream, extracted);
+
+            initialPosition = extracted.find(patternSeq);
+            if (initialPosition != std::string::npos)
+            {
+                initialPosition = initialPosition + patternSeq.length();
+                finalPosition = extracted.find("\n", initialPosition+1);
+                *pingNumber = std::stoi(extracted.substr(initialPosition, finalPosition-initialPosition));
+            }
+            initialPosition = extracted.find(patternTS);
+            if (initialPosition != std::string::npos)
+            {
+                initialPosition = initialPosition + patternTS.length();
+                finalPosition = extracted.find("\n", initialPosition+1);
+                sscanf(extracted.substr(initialPosition, finalPosition-initialPosition).c_str(), "%" PRIu64 "", timeStamp);
+            }
+            
+            if (strcmp(extracted.c_str(),"\r")==0)
+            {
+                HeaderEnd=true;   
+            }
+
         }
-    }
-
-    // Discard rest of first line
-
-   
-    // Get pingNumberfrom message
-    if ( ok && flagPing)
-    {
-        std::string sequenceNumberLineFirstPart;
-        std::string sequenceNumberLineSecondPart;
-
-        // Check text
-        std::string sequenceNumberText = "Sequence-Number";
-        getline( messageStream, sequenceNumberLineFirstPart, ':' );
-        getline( messageStream, sequenceNumberLineSecondPart);
-        if ( sequenceNumberLineFirstPart.compare( sequenceNumberText ) == 0)
-        {
-            *pingNumber = std::stoi(sequenceNumberLineSecondPart);
-        }        
-    }
-
-    // Get TimeStamp
-    if ( ok && flagPing)
-    {
-
-        std::string timestampLineFirstPart;
-        std::string timestampLineSecondPart;
-
-        // Check text
-        std::string timestampText = "Timestamp";
-        getline( messageStream, timestampLineFirstPart, ':' );
-        getline( messageStream, timestampLineSecondPart);
-        if ( timestampLineFirstPart.compare( timestampText ) == 0)
-        {
-            sscanf(timestampLineSecondPart.c_str(), "%" PRIu64 "", timeStamp);
-        }
+        //printf("SEQUENCE %d\n", *sequenceNumber);
         
     }
-
-
+  
     return ok;
 }
-bool Q4SMessageTools_is200OKMessage(std::string message)
-{
-    bool ok = true;
-
-    // Auxiliar string
-    std::string extracted;
-
-    // Convert message to a stringstream 
-    std::istringstream messageStream (message);
-
-    // Get method from message
-    if ( ok )
-    {
-        std::getline(messageStream, extracted, ' ');
-        std::getline(messageStream, extracted, ' ');
-        // Check if method is ping
-        if ( extracted.compare("200") != 0)
-        {
-            ok = false;
-        }
-    }
-
-    // Discard rest of first line
-    if (ok)
-    {
-        std::getline(messageStream, extracted);
-    }
-
-    return ok;
-}
+/*
 bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber, int *BWpacket_size)
 {
     bool ok = true;
@@ -218,6 +175,71 @@ bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber
     }    
     return ok;
 }
+*/
+bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber, int *BWpacket_size)
+{
+    bool ok = true;
+    bool HeaderEnd=false;
+    // Auxiliar string
+    std::string extracted;
+    std::string::size_type initialPosition;
+    std::string::size_type finalPosition;
+    std::string patternSeq="Sequence-Number:";
+    std::string patternCL="Content-Length:";
+    // Convert message to a stringstream 
+    *sequenceNumber=0; 
+    *BWpacket_size=0;
+    std::istringstream messageStream (message);
+    std::getline(messageStream, extracted);
+    initialPosition = extracted.find('BWIDTH');
+    if (initialPosition == std::string::npos)
+    {
+        ok = false;
+    }
+    // Get method from message
+    if ( ok )
+    {
+        while (!extracted.empty()&&!HeaderEnd)
+        {
+            extracted={}; 
+            std::getline(messageStream, extracted);
+
+            initialPosition = extracted.find(patternSeq);
+            if (initialPosition != std::string::npos)
+            {
+                initialPosition = initialPosition + patternSeq.length();
+                finalPosition = extracted.find("\n", initialPosition+1);
+                *sequenceNumber = std::stoi(extracted.substr(initialPosition, finalPosition-initialPosition));
+            }
+            initialPosition = extracted.find(patternCL);
+            if (initialPosition != std::string::npos)
+            {
+                initialPosition = initialPosition + patternCL.length();
+                finalPosition = extracted.find("\n", initialPosition+1);
+                *BWpacket_size = std::stoi(extracted.substr(initialPosition, finalPosition-initialPosition));
+
+            }
+            
+            if (strcmp(extracted.c_str(),"\r")==0)
+            {
+                HeaderEnd=true;   
+            }
+
+        }
+        if(*BWpacket_size==0)
+        {
+            std::getline(messageStream, extracted);
+            *BWpacket_size= extracted.size(); 
+            
+                
+        }
+        //printf("SEQUENCE %d\n", *sequenceNumber);
+        
+    }
+  
+    return ok;
+}
+/*
 
 void Q4SMessageTools_fillBodyToASize(std::string &message, int size)
 {
@@ -231,6 +253,7 @@ void Q4SMessageTools_fillBodyToASize(std::string &message, int size)
         message.append(toAppend);
     }   
 }
+*/
 bool Q4SMessageTools_isCancel(std::string message)
 {
     bool ok = false;

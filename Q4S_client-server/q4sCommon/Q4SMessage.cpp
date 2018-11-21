@@ -33,6 +33,7 @@ bool Q4SMessage::initRequest(
     makeHeaders(isSequenceNumber, sequenceNumber, isTimeStamp, timeStamp, isStage, stage, isMeaurements, values);
     //CRLF
     mMessage.append("\r\n");
+    
 
     // Body
     makeBody(q4SMType);
@@ -41,38 +42,7 @@ bool Q4SMessage::initRequest(
 }
 
 //initRequest2
-bool Q4SMessage::initRequest(
-   Q4SMType q4SMType, 
-   std::string host, 
-   std::string port, 
-   bool isSequenceNumber, unsigned long sequenceNumber, 
-   bool isTimeStamp, uint64_t timeStamp, 
-   bool isStage, unsigned long stage,
-   Q4SSDPParams q4SSDPParams)
-{
-    done(); 
-    bool ok = true;
 
-    // init
-    ok &= initRequest(q4SMType, host, port);
-    // SDP     
-    mMessage.append(Q4SSDP_create(q4SSDPParams)); 
-
-    return ok;
-}
-
-//initRequest3
-bool Q4SMessage::initRequest(Q4SMType q4SMType, std::string host, std::string port, Q4SSDPParams q4SSDPParams)
-{
-    bool ok = true;
-
-    // init
-    ok &= initRequest(q4SMType, host, port);
-    // SDP
-    mMessage.append(Q4SSDP_create(q4SSDPParams));
-
-    return ok;
-}
 
 bool Q4SMessage::initResponse(Q4SResponseCode q4SResponseCode, std::string reasonPhrase)
 {
@@ -94,29 +64,35 @@ bool Q4SMessage::init200OKBeginResponse(Q4SSDPParams q4SSDPParams)
 {
     bool ok = true;
     //sprintf(mMesZZsage, "200 OK\n%s%lu/%lu\n",QOSLEVEL_PATTERN, params.qosLevelUp, params.qosLevelDown, ALERTINGMODE_PATTERN, params.q4SSDPAlertingMode);
+    std::string SDP_message=Q4SSDP_create(q4SSDPParams); 
+    std::string SDP_length_ms="Content-length:"; 
+    unsigned long SDP_size=SDP_message.size(); 
+    SDP_length_ms.append(std::to_string((unsigned long long int)SDP_size));
+    SDP_length_ms.append("\r\n");
+
     mMessage="Q4S/1.0 200 OK\r\n";
+    mMessage.append("Content-Type: application/sdp\r\n");
+    mMessage.append(SDP_length_ms);
     mMessage.append("\r\n");
-    mMessage.append(Q4SSDP_create(q4SSDPParams));
+    mMessage.append(SDP_message);
     mMessage.append("\r\n");
+
     return ok;
 }
 
-bool Q4SMessage::initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp)
+
+bool Q4SMessage::initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp, bool results_flag, Q4SMeasurementValues *results)
 {
     bool ok = true;
-
-    ok &= initRequest(Q4SMTYPE_PING, host, port, true, sequenceNumber, true, timeStamp);
-//initRequest2
-    return ok;
-}
-
-bool Q4SMessage::initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp, Q4SMeasurementValues results)
-{
-    bool ok = true;
-
-    ok &= initRequest(Q4SMTYPE_PING, host, port, true, sequenceNumber, true, timeStamp, false, 0, true, &results);
+    if (results_flag)
+    {
+        ok &= initRequest(Q4SMTYPE_PING, host, port, true, sequenceNumber, true, timeStamp, false, 0, true, results);
+    }
+    else
+    {
+        ok &= initRequest(Q4SMTYPE_PING, host, port, true, sequenceNumber, true, timeStamp); 
+    }
     //initRequest1
-
     return ok;
 }
 
@@ -265,6 +241,7 @@ void Q4SMessage::makeHeaders(
         mMessage.append(std::to_string((unsigned long long int)stage));
         mMessage.append("\r\n");
     }
+    mMessage.append("Content-length:0\r\n");
 
     // Measurements
     if (isMeaurements)
@@ -296,7 +273,7 @@ void Q4SMessage::makeBody(Q4SMType q4SMType)
 
         case Q4SMTYPE_BWIDTH:
         {
-           Q4SMessageTools_fillBodyToASize(mMessage, 1024);
+           //Q4SMessageTools_fillBodyToASize(mMessage, 1024);
         }
         break;
 

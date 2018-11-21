@@ -292,6 +292,7 @@ bool Q4SServerProtocol::negotiation(Q4SSDPParams &params, Q4SMeasurementResult &
             if (measureOk && ok)
             {
                ok &= Q4SServerProtocol::ready(params);
+
                if (ok && params.ready_BW==1)
                {
                     measureOk = Q4SServerProtocol::measureStage1(params, results, upResults);
@@ -317,6 +318,7 @@ bool Q4SServerProtocol::negotiation(Q4SSDPParams &params, Q4SMeasurementResult &
         }
         else 
         {
+            printf("NO ok en ready\n");
             break; 
         }
 
@@ -416,9 +418,16 @@ void Q4SServerProtocol::continuity(Q4SSDPParams params)
 bool Q4SServerProtocol::ready(Q4SSDPParams &params)
 {
     std::string message;
+    std::string extracted;
     bool ok = false;
+    bool HeaderEnd=false;
+
+    std::string::size_type initialPosition;
+    std::string::size_type finalPosition;
     bool okCancel = true; 
-    struct timeval time_s;   
+    struct timeval time_s;
+    std::string patternStage;
+    patternStage.assign("Stage:");   
     int time_error = gettimeofday(&time_s, NULL); 
     if (time_error==-1)
     {
@@ -442,30 +451,41 @@ bool Q4SServerProtocol::ready(Q4SSDPParams &params)
 
         if (ok)
         {
+            HeaderEnd=false;
             std::string patternReady;
-            patternReady.assign( "READY" );
-            if ( message.substr( 0, patternReady.size( ) ).compare( patternReady ) != 0)
+            patternReady="READY";
+            std::istringstream messageStream (message);
+            std::getline(messageStream, extracted);
+            initialPosition = extracted.find(patternReady);
+            if (initialPosition == std::string::npos)
             {
                 ok = false;
             }
             else
             {
-                std::string patternStage;
-                patternStage.assign("Stage:");
-                if ( message.find( patternStage) == std::string::npos)
+                while (!extracted.empty()&&!HeaderEnd)
                 {
-                   ok = false;
-                }
-                else 
-                {
-                     params.ready_BW=std::stol(message.substr(message.rfind(":")+1, message.rfind(":")+2));
+                    std::getline(messageStream, extracted);
 
+                    
+                    if ( extracted.find(patternStage) != std::string::npos)
+                    {
+                        initialPosition = extracted.find(patternStage) + patternStage.length();
+                        finalPosition = extracted.find("\n", initialPosition+1);
+
+                        params.ready_BW=std::stol(extracted.substr(initialPosition, finalPosition-initialPosition));
+                        
+                    }
+                    if (strcmp(extracted.c_str(),"\r")==0)
+                    {
+                        HeaderEnd=true;   
+                    }
                 }    
 
             }
         }
-    time_error = gettimeofday(&time_s, NULL); 
-    actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
+        time_error = gettimeofday(&time_s, NULL); 
+        actualTime =  time_s.tv_sec*1000 + time_s.tv_usec/1000;
     }
     while(mReceivedMessagesUDP.size()>0)
     {
@@ -740,7 +760,7 @@ bool Q4SServerProtocol::interchangeMeasurementProcedure(Q4SMeasurementValues &up
     {
         // Send Info Ping with sequenceNumber 0
         Q4SMessage infoPingMessage;
-        ok &= infoPingMessage.initPing("myIp", q4SServerConfigFile.defaultUDPPort, 0, 0, results.values);
+        ok &= infoPingMessage.initPing("myIp", q4SServerConfigFile.defaultUDPPort, 0, 0, true, &results.values);
         ok &= mServerSocket.sendTcpData(DEFAULT_CONN_ID, infoPingMessage.getMessageCChar());
     }
 
@@ -1046,7 +1066,7 @@ void* Q4SServerProtocol::manageUdpReceivedData( )
                     printf( "Ping responsed %d\n", pingNumber);
                 #endif
                 Q4SMessage message200;
-                sprintf( reasonPhrase, "Q4S/1.0 200 OK\r\nSequence-Number:%d\r\nTimestamp:%" PRIu64 "\r\n\r\n", pingNumber,receivedTimeStamp );
+                sprintf( reasonPhrase, "Q4S/1.0 200 OK\r\nSequence-Number:%d\r\nTimestamp:%" PRIu64 "\r\nContent-Length:0\r\n\r\n", pingNumber,receivedTimeStamp );
 
                 ok &= mServerSocket.sendUdpBWData( connId, reasonPhrase );
 
@@ -1146,7 +1166,7 @@ void* Q4SServerProtocol::sendUDPBWFn(void* lpData )
             {
                 //ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SServerConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
                 sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\n\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\nContent-Type:text\r\nContent-Length:%d\r\n\r\n%s",sequenceNumber,TimeStamp2,size_packet, msn_BW);
                 ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID,   message_char);
                 sequenceNumber++; 
                 j++; 
@@ -1158,7 +1178,7 @@ void* Q4SServerProtocol::sendUDPBWFn(void* lpData )
             {        
                 //printf("mensahe extra %d, %d, %d, %d\n", interval, ms_per_message[k], k, sizeof(ms_per_message));
                 sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\n\r\n%s",sequenceNumber,TimeStamp2,msn_BW);
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\nContent-Type:text\r\nContent-Length:%d\r\n\r\n%s",sequenceNumber,TimeStamp2,size_packet,msn_BW);
                 ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID,   message_char);
                 
                 sequenceNumber++;  
