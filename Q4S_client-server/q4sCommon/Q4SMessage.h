@@ -79,7 +79,7 @@ class Q4SMessage
 
   
 
-    bool    initResponse(Q4SResponseCode q4SResponseCode, std::string reasonPhrase);
+    bool    initResponse(Q4SResponseCode q4SResponseCode);
     bool    init200OKBeginResponse(Q4SSDPParams q4SSDPParams);
     bool    initPing(std::string host, std::string port, unsigned long sequenceNumber, uint64_t timeStamp, bool results_flag=false, Q4SMeasurementValues *results=NULL);
     bool    initBWidth(std::string host, std::string port, unsigned long sequenceNumber);
@@ -112,7 +112,7 @@ private:
     void    makeBody(Q4SMType q4SMType);
 
     // Response 
-    void    makeFirstLineResponse(Q4SResponseCode q4SResponseCode, std::string reasonPhrase);
+    void    makeFirstLineResponse(Q4SResponseCode q4SResponseCode);
     void    makeFirstLineResponseStatusCode(Q4SResponseCode q4SResponseCode);
 
 

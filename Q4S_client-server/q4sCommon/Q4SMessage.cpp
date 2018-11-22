@@ -55,13 +55,13 @@ bool Q4SMessage::initRequest(
 //initRequest2
 
 
-bool Q4SMessage::initResponse(Q4SResponseCode q4SResponseCode, std::string reasonPhrase)
+bool Q4SMessage::initResponse(Q4SResponseCode q4SResponseCode)
 {
     bool ok = true;
 
     //mQ4SMRequestOrResponse = Q4SMREQUESTORRESPOND_RESPONSE;
 
-    makeFirstLineResponse(q4SResponseCode, reasonPhrase); 
+    makeFirstLineResponse(q4SResponseCode); 
 
     // Headers
     //makeHeaders(isSequenceNumber, sequenceNumber, isTimeStamp, timeStamp, isStage, stage);
@@ -331,7 +331,7 @@ void Q4SMessage::makeBody(Q4SMType q4SMType)
         break;
     }
 }
-void Q4SMessage::makeFirstLineResponse(Q4SResponseCode q4SResponseCode, std::string reasonPhrase)
+void Q4SMessage::makeFirstLineResponse(Q4SResponseCode q4SResponseCode)
 {
     // Q4S-Version
     addVersion();
@@ -339,11 +339,6 @@ void Q4SMessage::makeFirstLineResponse(Q4SResponseCode q4SResponseCode, std::str
     mMessage.append(" ");
     // Status-Code
     makeFirstLineResponseStatusCode(q4SResponseCode);
-    // SP
-    mMessage.append(" ");
-    // Reason-Phrase
-    mMessage.append(reasonPhrase);
-
     // CRLF
     mMessage.append("\r\n");
 }
@@ -355,21 +350,29 @@ switch (q4SResponseCode)
     case Q4SRESPONSECODE_200:
     {
         mMessage.append("200");
+        mMessage.append("OK\r\n");
+
     }
     break;
     case Q4SRESPONSECODE_415:
     {
         mMessage.append("415");
+        mMessage.append("Unsupported Media Type\r\n");
+        mMessage.append("Accepted: application/sdp\r\n");
+   
+
     }
     break;
     case Q4SRESPONSECODE_400:
     {
         mMessage.append("400");
+        mMessage.append("Bad Request\r\n");
     }
     break;
     case Q4SRESPONSECODE_505:
     {
         mMessage.append("505");
+        mMessage.append("Version not supported\r\n");
     }
     break;
     default:

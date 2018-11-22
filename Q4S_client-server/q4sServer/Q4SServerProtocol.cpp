@@ -206,7 +206,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
             if (initialPosition == std::string::npos)
             {
                 ok = false;
-                ok= messageError.initResponse(Q4SRESPONSECODE_400,"Bad Request");
+                ok&= messageError.initResponse(Q4SRESPONSECODE_400);
                 ok &= mServerSocket.sendTcpData( DEFAULT_CONN_ID, messageError.getMessageCChar());
                 return ok;  
             }
@@ -214,12 +214,10 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
             if (extracted.find(patternV) == std::string::npos)
             {
                 ok = false;
-                printf("VERSION ERROR: %s\n", extracted.c_str());
-                ok= messageError.initResponse(Q4SRESPONSECODE_505,"Version not supported");
+                ok= messageError.initResponse(Q4SRESPONSECODE_505);
                 ok &= mServerSocket.sendTcpData( DEFAULT_CONN_ID, messageError.getMessageCChar());
                 return ok; 
             }
-            printf("VERSION OK: %s\n", extracted.c_str());
             if (ok)
             {
                 while (!extracted.empty()&&!HeaderEnd)
@@ -236,7 +234,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
                         if (ContentType.find("application/sdp")==std::string::npos)
                         {
                             printf("ContentType: %s\n", ContentType.c_str());
-                            messageError.initResponse(Q4SRESPONSECODE_415,"Unsupported Media Type");
+                            messageError.initResponse(Q4SRESPONSECODE_415);
                             ok=false; 
                             ok &= mServerSocket.sendTcpData( DEFAULT_CONN_ID, messageError.getMessageCChar());
                             return ok; 

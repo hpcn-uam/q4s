@@ -122,7 +122,7 @@ bool Q4SMessageTools_isErrorMessage(std::string message)
 {
 
     bool ok = false;
-    bool HeaderEnd=false;
+
     std::string extracted;
     std::string::size_type initialPosition;
     // Auxiliar string
