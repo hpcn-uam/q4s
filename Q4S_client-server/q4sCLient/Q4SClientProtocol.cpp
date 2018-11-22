@@ -11,7 +11,7 @@
 //#include "EKey.h"
 #include "../q4sCommon/Q4SMessage.h"
 #include "../q4sCommon/Q4SMessageTools.h"
-static const char alphanum[] ="0123456789!@#$%^&*ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+static const char alphanum[] ="123456789!@#$%^&*ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 Q4SClientProtocol::Q4SClientProtocol ()
 {
     clear();
@@ -135,7 +135,7 @@ bool Q4SClientProtocol::ready(unsigned long stage,Q4SSDPParams &params)
     {
 
         Q4SMessage message;
-        message.initRequest(Q4SMTYPE_READY, "myIP", q4SClientConfigFile.defaultTCPPort, false, 0, false, 0, true, stage);
+        message.initRequest(Q4SMTYPE_READY, q4SClientConfigFile.serverIP.c_str(), q4SClientConfigFile.defaultTCPPort, false, 0, false, 0, true, stage);
         while(mReceivedMessagesUDP.size()>0)
         {
             //printf("BORRANDO MENSAJES\n");
@@ -181,12 +181,37 @@ bool Q4SClientProtocol::handshake(Q4SSDPParams &params)
     //printf("METHOD: begin\n");
 
     bool ok = true;
-    
+    bool okError= false; 
+    bool okReceived= false; 
     if( ok )
     {
         //sleep(5);
+        Q4SSDPParams Proposal_params; 
+        Proposal_params.session_id=1; 
+        Proposal_params.qosLevelUp = 0;
+        Proposal_params.qosLevelDown = 0;
+        Proposal_params.size_packet = 1000;
+        Proposal_params.q4SSDPAlertingMode = Q4SSDPALERTINGMODE_REACTIVE;     
+        Proposal_params.alertPause = 2000;
+        Proposal_params.recoveryPause = 2000;
+        Proposal_params.latency = 5.0;
+        Proposal_params.jitterUp = 1.5;
+        Proposal_params.jitterDown = 1.5;
+        Proposal_params.bandWidthUp = 27000;
+        Proposal_params.bandWidthDown = 27000;
+        Proposal_params.packetLossUp = 5;
+        Proposal_params.packetLossDown = 5;
+        Proposal_params.procedure.negotiationTimeBetweenPingsUplink = 50;
+        Proposal_params.procedure.negotiationTimeBetweenPingsDownlink = 50;
+        Proposal_params.procedure.continuityTimeBetweenPingsUplink = 50;
+        Proposal_params.procedure.continuityTimeBetweenPingsDownlink = 50;
+        Proposal_params.procedure.bandwidthTime = 1000;
+        Proposal_params.procedure.windowSizeLatencyCalcUplink= 30;
+        Proposal_params.procedure.windowSizeLatencyCalcDownlink= 30;
+        Proposal_params.procedure.windowSizePacketLossCalcUplink= 30;
+        Proposal_params.procedure.windowSizePacketLossCalcDownlink= 30;
         Q4SMessage message;
-        message.initRequest(Q4SMTYPE_BEGIN, "myIP", q4SClientConfigFile.defaultTCPPort);
+        message.initRequest(Q4SMTYPE_BEGIN, q4SClientConfigFile.serverIP.c_str(), q4SClientConfigFile.defaultTCPPort, false, 0, false, 0, false, 0, false, NULL, true, &Proposal_params);
         ok &= mClientSocket.sendTcpData( message.getMessageCChar() );
     }
 
@@ -196,13 +221,30 @@ bool Q4SClientProtocol::handshake(Q4SSDPParams &params)
 
         mReceivedMessagesTCP.readFirst( message );            
         ok = Q4SMessageTools_is200OKMessage(message,false, 0, 0);
-
+        
         while (!ok)
         {
-            mReceivedMessagesTCP.readFirst( message );
-            ok = Q4SMessageTools_is200OKMessage(message,false, 0, 0);
+            okReceived=mReceivedMessagesTCP.readFirst( message );
+            if (okReceived)
+            {
+                ok = Q4SMessageTools_is200OKMessage(message,false, 0, 0);
+                if (!ok)
+                {
+                    okError=Q4SMessageTools_isErrorMessage(message);
+                    if (okError)
+                    {
+                        printf("%s\n", message.c_str());
+                        break;
+                    }
+                }
+            }
         }
-        ok &= Q4SSDP_parse(message, params);
+        
+        if(ok)
+        {
+            ok &= Q4SSDP_parse(message, params);
+
+        }
         qosLevel= params.qosLevelDown;
     }
 
@@ -476,7 +518,7 @@ bool Q4SClientProtocol::interchangeMeasurementProcedure(Q4SMeasurementValues &do
     {
         // Send Info Ping with sequenceNumber 0
         Q4SMessage infoPingMessage;
-        ok &= infoPingMessage.initPing("myIp", q4SClientConfigFile.defaultUDPPort, 0, 0, true, &results.values);
+        ok &= infoPingMessage.initPing(q4SClientConfigFile.serverIP.c_str(), q4SClientConfigFile.defaultUDPPort, 0, 0, true, &results.values);
         ok &= mClientSocket.sendTcpData( infoPingMessage.getMessageCChar() );
     }
     
@@ -611,7 +653,7 @@ bool Q4SClientProtocol::sendRegularPings(std::vector<uint64_t> &arrSentPingTimes
         arrSentPingTimestamps.push_back( timeStamp );
 
         // Prepare message and send
-        message.initPing("myIp", q4SClientConfigFile.defaultUDPPort, pingNumber, timeStamp);
+        message.initPing(q4SClientConfigFile.serverIP.c_str(), q4SClientConfigFile.defaultUDPPort, pingNumber, timeStamp);
         ok &= mClientSocket.sendUdpData( message.getMessageCChar() );
 
         // Wait the established time between pings
@@ -965,7 +1007,7 @@ void* Q4SClientProtocol::sendUDPBWFn(void* lpData )
 //gettimeofday(&time_s0, NULL); 
                 //ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SClientConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
              sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\n\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
+            "BWIDTH q4s://%s:%s  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\n\r\n%s\r\n",q4SClientConfigFile.serverIP.c_str(),q4SClientConfigFile.defaultTCPPort.c_str(),sequenceNumber,TimeStamp2, msn_BW);
 //gettimeofday(&time_s1, NULL); 
 //printf("Cost initRequest: %lus%luus\n",(time_s1.tv_sec-time_s0.tv_sec),(time_s1.tv_usec-time_s0.tv_usec));
 //gettimeofday(&time_s0, NULL); 
@@ -983,7 +1025,7 @@ void* Q4SClientProtocol::sendUDPBWFn(void* lpData )
             {        
                 //printf("mensahe extra %d, %d, %d, %d\n", interval, ms_per_message[k], k, sizeof(ms_per_message));
                  sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\nSequence-Number:%lu\nTimestamp:%" PRIu64 "\r\n\r\n%s",sequenceNumber,TimeStamp2, msn_BW);
+            "BWIDTH q4s://%s:%s  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\n\r\n%s\r\n",q4SClientConfigFile.serverIP.c_str(),q4SClientConfigFile.defaultTCPPort.c_str(),sequenceNumber,TimeStamp2, msn_BW);
                 //ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SClientConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
                 ok &= mClientSocket.sendUdpBWData(message_char);
                 sequenceNumber++;  

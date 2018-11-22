@@ -19,8 +19,10 @@ bool Q4SSDPProcedure::operator ==(const Q4SSDPProcedure p) const
 bool Q4SSDPParams::operator ==(const Q4SSDPParams p) const
 {
 	bool equal = true;
+	equal &= (this->session_id == p.session_id);	
 	equal &= (this->qosLevelUp == p.qosLevelUp);
 	equal &= (this->qosLevelDown == p.qosLevelDown);
+	equal &= (this->size_packet == p.size_packet);
 	equal &= (this->q4SSDPAlertingMode == p.q4SSDPAlertingMode);
 	equal &= (this->alertPause == p.alertPause);
 	equal &= (this->recoveryPause == p.recoveryPause);

@@ -74,7 +74,8 @@ class Q4SMessage
                         bool isStage=false,
                         unsigned long stage=0,
                         bool isMeaurements=false,
-                        Q4SMeasurementValues *values=NULL);
+                        Q4SMeasurementValues *values=NULL,
+                        bool incSDPparam=false, Q4SSDPParams *q4SSDPParams=NULL);
 
   
 
@@ -105,7 +106,9 @@ private:
                         bool isStage=false, 
                         unsigned long stage=0,
                         bool isMeaurements=false,
-                        Q4SMeasurementValues *values=NULL);
+                        Q4SMeasurementValues *values=NULL,
+                        bool incSDPparam=false, 
+                        unsigned long SDP_size=0);
     void    makeBody(Q4SMType q4SMType);
 
     // Response 

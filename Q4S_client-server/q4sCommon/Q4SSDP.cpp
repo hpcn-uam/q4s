@@ -94,7 +94,22 @@ std::string makeLatencyLine(float latency)
     line.append("\n");
     return line;
 }
-
+std::string makeSessionIdLine(int session_id)
+{
+    std::string line;
+    line.append("a=session-id:");
+    line.append(std::to_string(( int)session_id));
+    line.append("\n");
+    return line;
+}
+std::string makePacketSizeLine(int size_packet)
+{
+    std::string line;
+    line.append("a=max-content-length:");
+    line.append(std::to_string(( int)size_packet));
+    line.append("\n");
+    return line;
+}
 std::string makeJitterLine(float jitterUp, float jitterDown)
 {
     std::string line;
@@ -543,6 +558,8 @@ bool Q4SSDP_parseProcedure(std::string message, Q4SSDPProcedure &procedure)
 std::string Q4SSDP_create(Q4SSDPParams params)
 {
     std::string message;
+    
+    message.append( makeSessionIdLine(params.session_id)); 
     message.append( makeQosLevelLine(params.qosLevelUp, params.qosLevelDown));
     message.append( makeAlertingModeLine(params.q4SSDPAlertingMode));
     message.append( makeAppAlertPauseLine(params.alertPause));
@@ -552,8 +569,7 @@ std::string Q4SSDP_create(Q4SSDPParams params)
     message.append( makeBandWidthLine(params.bandWidthUp, params.bandWidthDown));
     message.append( makePacketLossLine(params.packetLossUp, params.packetLossDown));
     message.append( makeProcedureLine(params.procedure));
-    message.append("a=packet-length:");
-    message.append(std::to_string(params.size_packet));   
+    message.append( makePacketSizeLine(params.size_packet)); 
     //message.append("\n");
     return message;
 }

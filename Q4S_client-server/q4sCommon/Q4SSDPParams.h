@@ -33,6 +33,7 @@ struct Q4SSDPMeasurement
 
 struct Q4SSDPParams
 {
+    int session_id; 
     int qosLevelUp; 
     int qosLevelDown; 
     int size_packet; 

@@ -156,6 +156,8 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
     //printf("----------Handshake Phase\n");
     //printf("WAITING FOR BEGIN\n");
     std::string message;
+    bool HeaderEnd; 
+    Q4SMessage messageError;
             //printf("MEASURING\n");
     bool okCancel= true; 
     bool ok = false;                 
@@ -187,11 +189,67 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
         
         if (ok)
         {
-            std::string pattern;
-            pattern.assign( "BEGIN" );
-            if (message.substr( 0, pattern.size() ).compare( pattern ) != 0)
+            HeaderEnd=false;
+            std::string patternBegin;
+            patternBegin="BEGIN";// si no, 400 Bad Request
+            std::string extracted;
+            std::string ContentType; 
+            std::string ContentLength; 
+            std::string::size_type initialPosition;
+            std::string::size_type finalPosition;
+            std::string patternCT="Content-Type:"; //415 Unsupported Media Type
+            std::string patternCL="Content-Length:";
+            std::string patternV="Q4S/1.0";//505 Version not supported
+            std::istringstream messageStream (message);
+            std::getline(messageStream, extracted);
+            initialPosition = extracted.find(patternBegin);
+            if (initialPosition == std::string::npos)
             {
                 ok = false;
+                ok= messageError.initResponse(Q4SRESPONSECODE_400,"Bad Request");
+                ok &= mServerSocket.sendTcpData( DEFAULT_CONN_ID, messageError.getMessageCChar());
+                return ok;  
+            }
+            
+            if (extracted.find(patternV) == std::string::npos)
+            {
+                ok = false;
+                printf("VERSION ERROR: %s\n", extracted.c_str());
+                ok= messageError.initResponse(Q4SRESPONSECODE_505,"Version not supported");
+                ok &= mServerSocket.sendTcpData( DEFAULT_CONN_ID, messageError.getMessageCChar());
+                return ok; 
+            }
+            printf("VERSION OK: %s\n", extracted.c_str());
+            if (ok)
+            {
+                while (!extracted.empty()&&!HeaderEnd)
+                {
+                    std::getline(messageStream, extracted);
+
+                    
+                    initialPosition = extracted.find(patternCT);
+                    if (initialPosition != std::string::npos)
+                    {
+                        initialPosition = initialPosition + patternCT.length();
+                        finalPosition = extracted.find("\n", initialPosition+1);
+                        ContentType = extracted.substr(initialPosition, finalPosition-initialPosition);
+                        if (ContentType.find("application/sdp")==std::string::npos)
+                        {
+                            printf("ContentType: %s\n", ContentType.c_str());
+                            messageError.initResponse(Q4SRESPONSECODE_415,"Unsupported Media Type");
+                            ok=false; 
+                            ok &= mServerSocket.sendTcpData( DEFAULT_CONN_ID, messageError.getMessageCChar());
+                            return ok; 
+                        }
+                    }
+                    
+
+                    if (strcmp(extracted.c_str(),"\r")==0)
+                    {
+                        HeaderEnd=true;   
+                    }
+                }    
+
             }
         }
     }
@@ -200,6 +258,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
         Q4SMessage message200;
         params.qosLevelUp = 0;
         params.qosLevelDown = 0;
+        params.size_packet = 1000;
         if (q4SServerConfigFile.isReactive)
         {
            params.q4SSDPAlertingMode = Q4SSDPALERTINGMODE_REACTIVE;
@@ -208,6 +267,7 @@ bool Q4SServerProtocol::handshake(Q4SSDPParams &params)
         {
            params.q4SSDPAlertingMode = Q4SSDPALERTINGMODE_Q4SAWARENETWORK;
         }
+        params.session_id=DEFAULT_CONN_ID; 
         params.alertPause = q4SServerConfigFile.alertPause;
         params.recoveryPause = q4SServerConfigFile.recoveryPause;
         params.latency = q4SServerConfigFile.latency;
@@ -1166,7 +1226,7 @@ void* Q4SServerProtocol::sendUDPBWFn(void* lpData )
             {
                 //ok &= message.initRequest(Q4SMTYPE_BWIDTH, "myIp", q4SServerConfigFile.defaultUDPPort, true, sequenceNumber, true, TimeStamp2);
                 sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\nContent-Type:text\r\nContent-Length:%d\r\n\r\n%s",sequenceNumber,TimeStamp2,size_packet, msn_BW);
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\nContent-Type:text\r\nContent-Length:%d\r\n\r\n%s\r\n",sequenceNumber,TimeStamp2,size_packet, msn_BW);
                 ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID,   message_char);
                 sequenceNumber++; 
                 j++; 
@@ -1178,7 +1238,7 @@ void* Q4SServerProtocol::sendUDPBWFn(void* lpData )
             {        
                 //printf("mensahe extra %d, %d, %d, %d\n", interval, ms_per_message[k], k, sizeof(ms_per_message));
                 sprintf(message_char,
-            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\nContent-Type:text\r\nContent-Length:%d\r\n\r\n%s",sequenceNumber,TimeStamp2,size_packet,msn_BW);
+            "BWIDTH q4s://myIp:27016  Q4S/1.0\r\nSequence-Number:%lu\r\nTimestamp:%" PRIu64 "\r\nContent-Type:text\r\nContent-Length:%d\r\n\r\n%s\r\n",sequenceNumber,TimeStamp2,size_packet,msn_BW);
                 ok &= mServerSocket.sendUdpData(DEFAULT_CONN_ID,   message_char);
                 
                 sequenceNumber++;  

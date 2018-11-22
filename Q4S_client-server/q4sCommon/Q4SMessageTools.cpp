@@ -118,6 +118,138 @@ bool Q4SMessageTools_is200OKMessage(std::string message,bool flagPing,  int *pin
   
     return ok;
 }
+bool Q4SMessageTools_isErrorMessage(std::string message)
+{
+
+    bool ok = false;
+    bool HeaderEnd=false;
+    std::string extracted;
+    std::string::size_type initialPosition;
+    // Auxiliar string
+    
+    // Convert message to a stringstream 
+
+    std::istringstream messageStream (message);
+    std::getline(messageStream, extracted);
+    initialPosition = extracted.find("400");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok; 
+    }
+    // Get method from message
+    initialPosition = extracted.find("404");
+
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("405");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("406");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("408");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("413");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("414");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("415");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("416");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("500");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    // Get method from message
+    initialPosition = extracted.find("501");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("503");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("504");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("505");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("513");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("600");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("601");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("603");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    }
+    initialPosition = extracted.find("604");
+    if (initialPosition == std::string::npos)
+    {
+        ok = true;
+        return ok;
+    } 
+    return ok;
+}
 /*
 bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber, int *BWpacket_size)
 {
@@ -191,7 +323,7 @@ bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber
     *BWpacket_size=0;
     std::istringstream messageStream (message);
     std::getline(messageStream, extracted);
-    initialPosition = extracted.find('BWIDTH');
+    initialPosition = extracted.find("BWIDTH");
     if (initialPosition == std::string::npos)
     {
         ok = false;
@@ -239,21 +371,7 @@ bool Q4SMessageTools_isBandWidthMessage(std::string message, int *sequenceNumber
   
     return ok;
 }
-/*
 
-void Q4SMessageTools_fillBodyToASize(std::string &message, int size)
-{
-    int actualSize = message.size();
-
-    int byteCounter;
-
-    for (byteCounter=actualSize; byteCounter<size; byteCounter++)
-    {
-        std::string toAppend ="X";
-        message.append(toAppend);
-    }   
-}
-*/
 bool Q4SMessageTools_isCancel(std::string message)
 {
     bool ok = false;

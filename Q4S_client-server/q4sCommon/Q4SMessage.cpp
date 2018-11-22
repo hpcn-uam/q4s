@@ -20,22 +20,33 @@ bool Q4SMessage::initRequest(
    bool isSequenceNumber, unsigned long sequenceNumber, 
    bool isTimeStamp, uint64_t timeStamp, 
    bool isStage, unsigned long stage,
-   bool isMeaurements,Q4SMeasurementValues *values)
+   bool isMeaurements,Q4SMeasurementValues *values,
+   bool incSDPparam, Q4SSDPParams *q4SSDPParams)
  {
     done();
-
+    std::string SDP_message;
+    unsigned long SDP_size;
     bool ok = true;
     mQ4SMRequestOrResponse = Q4SMREQUESTORRESPOND_REQUEST;
+    if (incSDPparam)
+    {
+        SDP_message=Q4SSDP_create(*q4SSDPParams); 
+        SDP_size=SDP_message.size(); 
+    }
     // FirstLine
     makeFirstLineRequest(q4SMType, host, port);
     // Headers
     
-    makeHeaders(isSequenceNumber, sequenceNumber, isTimeStamp, timeStamp, isStage, stage, isMeaurements, values);
+    makeHeaders(isSequenceNumber, sequenceNumber, isTimeStamp, timeStamp, isStage, stage, isMeaurements, values, incSDPparam, SDP_size);
     //CRLF
     mMessage.append("\r\n");
     
 
     // Body
+    if (incSDPparam)
+    {
+        mMessage.append(SDP_message);
+    }
     makeBody(q4SMType);
 
     return ok;
@@ -48,7 +59,7 @@ bool Q4SMessage::initResponse(Q4SResponseCode q4SResponseCode, std::string reaso
 {
     bool ok = true;
 
-    mQ4SMRequestOrResponse = Q4SMREQUESTORRESPOND_RESPONSE;
+    //mQ4SMRequestOrResponse = Q4SMREQUESTORRESPOND_RESPONSE;
 
     makeFirstLineResponse(q4SResponseCode, reasonPhrase); 
 
@@ -202,6 +213,7 @@ void Q4SMessage::makeFirstLineRequestURI(std::string host, std::string port)
 {
     std::string stringUri = "q4s:";
     stringUri.append("//");
+    
     stringUri.append(host);
     stringUri.append(":");
     stringUri.append(port);
@@ -214,11 +226,15 @@ void Q4SMessage::makeHeaders(
     bool isTimeStamp, uint64_t timeStamp, 
     bool isStage, unsigned long stage,
     bool isMeaurements,
-    Q4SMeasurementValues *values)
+    Q4SMeasurementValues *values,
+    bool incSDPparam,
+    unsigned long SDP_size)
 {
     // TODO
      // Session-Id     
     //Sequence-Number
+    mMessage.append("Session-Id: 1\r\n");
+
     if (isSequenceNumber)
     {
         mMessage.append("Sequence-Number:");
@@ -241,9 +257,19 @@ void Q4SMessage::makeHeaders(
         mMessage.append(std::to_string((unsigned long long int)stage));
         mMessage.append("\r\n");
     }
-    mMessage.append("Content-length:0\r\n");
+    if (incSDPparam)
+    {
+        mMessage.append("Content-Type: application/sdp\r\n");
 
-    // Measurements
+        mMessage.append("Content-length: ");
+        mMessage.append(std::to_string((unsigned long long int)SDP_size));
+        mMessage.append("\r\n");
+    }
+    else
+    {
+       mMessage.append("Content-length: 0\r\n"); 
+    }
+    
     if (isMeaurements)
     {     
         mMessage.append(Q4SMeasurementValues_create(*values));
@@ -258,6 +284,18 @@ void Q4SMessage::makeBody(Q4SMType q4SMType)
     {
         case Q4SMTYPE_BEGIN:
         {
+            /*
+            mMessage.append("v=0\r\n");
+            mMessage.append("o=\r\n");    // Measurements
+            mMessage.append("s=Q4S\n");
+            mMessage.append("i=Q4S desired parameters\r\n");
+            mMessage.append("t=0 0\r\n");
+            mMessage.append("a=q0s-level:0/0\r\n");
+            mMessage.append("a=latency:5\r\n");
+            mMessage.append("a=jitter:2/2\r\n");
+            mMessage.append("a=bandwidth:1000/1000\r\n");
+            mMessage.append("a=packetloss:0.5/0.5\r\n");
+            */
         }
         break;
 
@@ -319,7 +357,21 @@ switch (q4SResponseCode)
         mMessage.append("200");
     }
     break;
-
+    case Q4SRESPONSECODE_415:
+    {
+        mMessage.append("415");
+    }
+    break;
+    case Q4SRESPONSECODE_400:
+    {
+        mMessage.append("400");
+    }
+    break;
+    case Q4SRESPONSECODE_505:
+    {
+        mMessage.append("505");
+    }
+    break;
     default:
     {
        // TODO
