@@ -59,7 +59,7 @@ def main():
         #server.client_ip="192.168.1.102"
         server.flag_p_size= True
         server.flag_Continuity_dron=False
-        server.flag_Continuity_server=False
+        server.flag_Continuity_server=True
         server.QoSlevel= 0
         server.packet_size=2
         server.coder_direction = (coder_ip, coder_port)
@@ -78,13 +78,15 @@ class UDPHandler(socketserver.BaseRequestHandler):
         flag_localhost=False
         flag_Termination= False
         #print("connected from:%s"%str(self.client_address[0]))
+        #print("local.%s"%str(self.server.my_ip))
         if str(self.client_address[0])==self.server.my_ip:
                 flag_localhost=True
+                #print("Detected localhost")
 
         level = self.server.level
         flag_Continuity_dron=self.server.flag_Continuity_dron
         flag_Continuity_server=self.server.flag_Continuity_server
-
+        dim_packet= [1,1,2,2],[320,320,640,640]
         flag_p_size= self.server.flag_p_size
         packet_size=self.server.packet_size
         QoSlevel = self.server.QoSlevel
@@ -96,6 +98,7 @@ class UDPHandler(socketserver.BaseRequestHandler):
         if flag_Continuity:
             if flag_localhost:
                 self.server.flag_Continuity_dron=True
+
                 #print("Flag localhost_continuity")
             else: 
                 self.server.flag_Continuity_server=True
@@ -105,15 +108,35 @@ class UDPHandler(socketserver.BaseRequestHandler):
             self.server.flag_Continuity_dron=False
             self.server.flag_Continuity_server=False
             command_Decodec="ssh hpcn@%s 'cd Repos/Packetization-LHE;screen -S screenDecodec -d -m ./LHEPacketizer.out -rc %s --pipe /home/hpcn/Repos/Packetization-LHE/dummy'"%(self.server.client_ip, self.server.my_ip)
+            os.system("lhe_config -s>lhe_conf.csv")
+            command_config1='grep "LHE_SETTINGS_IMAGE_RESOLUTION" lhe_conf.csv| awk'
+            command_config2= 'BEGIN{FS="width: "}{if (length($2)>0) print $2}'
+            command_config=command_config1+ " '"+command_config2+"'"
+            width_image=int(os.popen(command_config).read())
+            #print(width_image)
+            os.system("rm lhe_conf.csv")
             #print(command_Decodec)
+            
             os.system(command_Decodec)
+            if width_image>1280:
+                dim_packet[1][:]=[int(width_image/2), int(width_image/2), int(width_image/2),int( width_image/2)]
+                dim_packet[0][:]=[1,1,1,1]
+            else:
+                dim_packet[1][:]=[int(width_image/2), width_image, int(width_image/2), width_image]
+                if width_image*2>1280:
+                    dim_packet[0][:]=[1,1,1,1]
+                else:
+                    dim_packet[0][:]=[1,1,2,2]
+            #print(dim_packet[1][0])
+            
             time.sleep(1)
 
         
-        flag_p_size, level, QoSlevel,packet_size,height,width,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, lt_up, jt_up, pl_up, bw_up, level, flag_p_size, QoSlevel, packet_size,flag_Continuity,flag_Termination, flag_localhost)
-        params =urllib.parse.urlencode({'fps': fps, 'clr': clr, 'rs': rs, 'wp':width ,'hp':height})
+        flag_p_size, level, QoSlevel,packet_size,fps,rs,clr = calculate_parameters(latency, jitter, bandwidth, packetloss, lt_up, jt_up, pl_up, bw_up, level, flag_p_size, QoSlevel, packet_size,flag_Continuity,flag_Termination, flag_localhost) 
+        params =urllib.parse.urlencode({'fps': fps, 'clr': clr, 'rs': rs, 'wp':dim_packet[1][packet_size] ,'hp':dim_packet[0][packet_size]})
         #with open("../test/measured/dynamic_actuator.txt", "a") as text_file:
-        #        text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr,QoSlevel))
+        #    text_file.write("%f,%d,%d,%d,%d,%d,%d\n"%(ts,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr,QoSlevel))
+        #print(params)
         headers = {"Content-type": "","Accept": "text/plain"}
         conn = http.client.HTTPConnection(self.server.coder_ip,self.server.coder_port)
         conn.request("POST","",params, headers)
@@ -194,8 +217,8 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss, lt_up, jt_up, b
     fps=0
     clr=0
     rs= 0
-    dim_packet= [1,320],[1,640],[6,160],[8,128]
-    packet_RTP= 750, 980, 1240, 1400
+    #dim_packet= [1,320],[1,640],[6,160],[8,128]
+    #packet_RTP= 750, 980, 1240, 1400
 
     if flag_Continuity==False & flag_Termination==False:
         if latency>float(latency_app):
@@ -294,7 +317,7 @@ def calculate_parameters(latency, jitter, bandwidth, packetloss, lt_up, jt_up, b
         clr=0
         rs= 1
 
-    return flag_p_size, level, QoSlevel, packet_size,dim_packet[packet_size][0],dim_packet[packet_size][1],fps,rs,clr
+    return flag_p_size, level, QoSlevel, packet_size,fps,rs,clr
 
 
 def parse_metrics(text):
